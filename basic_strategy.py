@@ -1,5 +1,9 @@
-
 class Basic_Strategy():
+
+	def __init__(self, stand_on_soft_17=True):
+		self.strategy_map = Basic_Strategy.basic_strategy_map['s17' if stand_on_soft_17 else 'h17']
+
+
 	s = "s" 	# stand
 	ds = "ds" 	# double else stand
 	h = "h" 	# hit
@@ -59,16 +63,8 @@ class Basic_Strategy():
 				10: never_splits,
 				"A": always_splits
 			}
-		}
-	}
-
-
-	high_values = {
-		"A": [1, 11],
-		"Q": 10,
-		"K": 10,
-		"J": 10,
-		"1": 10
+		},
+		"h17": {}
 	}
 
 

@@ -8,8 +8,10 @@ class Deck():
 		Deck.single_deck = [ str(value) + suit for value in Deck.values for suit in Deck.suits ]
 		self.shoe = []
 
-	def draw():
+
+	def draw(self):
 		return self.shoe.pop()
+
 
 	def get_decks(self, number_of_decks, penetration_percentage):
 		shuffled_decks = Deck.shuffle(Deck.single_deck * number_of_decks)
@@ -27,6 +29,7 @@ class Deck():
 			inverted_index = abs(index - deck_length)
 			deck = [mid_card] + deck[:inverted_index] + [end_card] + deck[inverted_index:]
 		return deck
+
 
 	@staticmethod
 	def penetrate(deck, percentage):
