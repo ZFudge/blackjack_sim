@@ -1,9 +1,7 @@
 import unittest
 from functools import reduce
 
-
-# from blackjack import Blackjack
-from cards import Deck
+from cards import Shoe
 from evaluate import Evaluate
 from basic_strategy import Basic_Strategy
 from hi_lo import Count
@@ -11,25 +9,22 @@ from hi_lo import Count
 class BlackjackTest(unittest.TestCase):
 
 	def test_create_deck(self):
-		new_deck = Deck()
-		new_deck.get_decks(8, 65)
-		self.assertEqual(len(new_deck.shoe), 270)
-		print(new_deck.shoe)
+		new_shoe = Shoe()
+		self.assertEqual(len(new_shoe.shoe), 270)
+		print(new_shoe.shoe)
 
 
 	def test_draw(self):
-		new_deck = Deck()
-		new_deck.get_decks(8, 65)
+		new_shoe = Shoe()
 		for x in range(100):
-			new_deck.shoe.pop()
-		self.assertEqual(len(new_deck.shoe), 170)
+			new_shoe.shoe.pop()
+		self.assertEqual(len(new_shoe.shoe), 170)
 
 
 	def test_evaluation(self):
 		eve = Evaluate()
-		new_deck = Deck()
-		new_deck.get_decks(1, 100)
-		evaluated_shoe = [eve.evaluate(x, '0a') for x in new_deck.shoe]
+		new_shoe = Shoe(1, 100)
+		evaluated_shoe = [eve.evaluate(x, '0a') for x in new_shoe.shoe]
 		summed = reduce(lambda x, y : x + y if type(y) is int else x + sum(y), evaluated_shoe)
 		self.assertEqual(summed, 384)
 
@@ -56,3 +51,4 @@ class BlackjackTest(unittest.TestCase):
 		counts.count_card('8h')
 		counts.count_card('7c')
 		self.assertEqual(counts.count, 0)
+

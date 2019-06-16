@@ -1,21 +1,50 @@
 import random
 
-class Deck():
+class Shoe():
+
 	values = [ 2, 3, 4, 5, 6, 7, 8, 9, 1, "J", "Q", "K", "A" ]
 	suits = [ "c", "d", "h", "s" ]
 
-	def __init__(self):
-		Deck.single_deck = [ str(value) + suit for value in Deck.values for suit in Deck.suits ]
+	def __init__(self, number_of_decks=8, penetration_percentage=65):
+		Shoe.single_deck = [ str(value) + suit for value in Shoe.values for suit in Shoe.suits ]
 		self.shoe = []
+		self._number_of_decks = number_of_decks
+		self._penetration_percentage = penetration_percentage
+		self.get_decks()
+
+
+	@property
+	def deck_count(self):
+		return self.shoe / (self.penetration_percentage / 100 * 52)
+
+
+	@property
+	def number_of_decks(self):
+		return self._number_of_decks
+
+
+	@number_of_decks.setter
+	def number_of_decks(self, value):
+		self._number_of_decks = value
+
+
+	@property
+	def penetration_percentage(self):
+		return self._penetration_percentage
+
+
+	@penetration_percentage.setter
+	def penetration_percentage(self, value):
+		self._penetration_percentage = value
 
 
 	def draw(self):
 		return self.shoe.pop()
 
 
-	def get_decks(self, number_of_decks, penetration_percentage):
-		shuffled_decks = Deck.shuffle(Deck.single_deck * number_of_decks)
-		penetrated_decks = Deck.penetrate(shuffled_decks, penetration_percentage)
+	def get_decks(self):
+		shuffled_decks = Shoe.shuffle(Shoe.single_deck * self.number_of_decks)
+		penetrated_decks = Shoe.penetrate(shuffled_decks, self.penetration_percentage)
 		self.shoe += penetrated_decks
 
 

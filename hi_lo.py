@@ -1,4 +1,5 @@
 class Count():
+
 	counts =  {
 		'cards': {
 			'lo': ['2', '3', '4', '5', '6'],
@@ -16,18 +17,30 @@ class Count():
 		self.count = 0
 		self.true_count = 0
 
+
 	def count_card(self, card):
 		card = card[0]
-		self.count += self.increment_count(card)
+		self.count += self.hi_lo(card)
 
-	def increment_count(self, card):
-		if card in Count.counts['cards']['lo']:
+
+	def deck_size_to_true_count(self, deck_size):
+		self.true_count = self.count / deck_size
+
+
+	@classmethod
+	def hi_lo(cls, card):
+		cards = cls.counts['cards']
+		if card in cards['lo']:
 			count = 'lo'
-		elif card in Count.counts['cards']['md']:
+		elif card in cards['md']:
 			count = 'md'
-		elif card in Count.counts['cards']['hi']:
+		elif card in cards['hi']:
 			count = 'hi'
-		return Count.counts['values'][count]
+		return cls.counts['values'][count]
 
-	def calculate_true_count(self):
-		pass
+
+def main():
+	pass
+
+if __name__ == '__main__':
+	main()
