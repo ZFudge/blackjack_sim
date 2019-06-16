@@ -1,12 +1,11 @@
+from cards import single_deck as single_deck_list
 import random
 
 class Shoe():
 
-	values = [ 2, 3, 4, 5, 6, 7, 8, 9, 1, "J", "Q", "K", "A" ]
-	suits = [ "c", "d", "h", "s" ]
+	single_deck = single_deck_list
 
 	def __init__(self, number_of_decks=8, penetration_percentage=65):
-		Shoe.single_deck = [ str(value) + suit for value in Shoe.values for suit in Shoe.suits ]
 		self.shoe = []
 		self._number_of_decks = number_of_decks
 		self._penetration_percentage = penetration_percentage
@@ -15,7 +14,7 @@ class Shoe():
 
 	@property
 	def deck_count(self):
-		return self.shoe / (self.penetration_percentage / 100 * 52)
+		return round(len(self.shoe) / (self.penetration_percentage / 100 * 52))
 
 
 	@property

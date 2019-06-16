@@ -1,24 +1,11 @@
+from cards import high_values as high_value_cards
+
 class Evaluate():
 
-	high_values = {
-		"A": [1, 11],
-		"Q": 10,
-		"K": 10,
-		"J": 10,
-		"1": 10
-	}
+	high_values = high_value_cards
 
 	def __init__(self):
 		pass
-
-
-	def get_value(self, card):
-		card = card[0]
-		if card in Evaluate.high_values:
-			value = Evaluate.high_values[card]
-		else:
-			value = int(card)
-		return value
 
 
 	def evaluate(self, c1, c2):
@@ -29,6 +16,15 @@ class Evaluate():
 			return v1 + v2
 		else:
 			return self.pack_list(val_list)
+
+
+	def get_value(self, card):
+		card = card[0]
+		if card in Evaluate.high_values:
+			value = Evaluate.high_values[card]
+		else:
+			value = int(card)
+		return value
 
 
 	def pack_list(self, lst):

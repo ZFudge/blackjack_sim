@@ -1,17 +1,8 @@
+from cards import counts as card_counts
+
 class Count():
 
-	counts =  {
-		'cards': {
-			'lo': ['2', '3', '4', '5', '6'],
-			'md': ['7', '8', '9'],
-			'hi': ['1', 'J', 'Q', 'K', 'A']
-		},
-		'values': {
-			"lo": -1,
-			"md": 0,
-			"hi": 1
-		}
-	}
+	counts = card_counts
 
 	def __init__(self):
 		self.count = 0
