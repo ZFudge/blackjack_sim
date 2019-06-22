@@ -1,10 +1,12 @@
 import unittest
 from functools import reduce
 
-from cards import Shoe
+from shoe import Shoe
 from evaluate import Evaluate
 from basic_strategy import Basic_Strategy
 from hi_lo import Count
+from player import Player
+
 
 class BlackjackTest(unittest.TestCase):
 
@@ -17,38 +19,36 @@ class BlackjackTest(unittest.TestCase):
 	def test_draw(self):
 		new_shoe = Shoe()
 		for x in range(100):
-			new_shoe.shoe.pop()
+			new_shoe.draw()
 		self.assertEqual(len(new_shoe.shoe), 170)
 
 
 	def test_evaluation(self):
 		eve = Evaluate()
-		new_shoe = Shoe(1, 100)
-		evaluated_shoe = [eve.evaluate(x, '0a') for x in new_shoe.shoe]
-		summed = reduce(lambda x, y : x + y if type(y) is int else x + sum(y), evaluated_shoe)
-		self.assertEqual(summed, 384)
+		new_shoe = Shoe(number_of_decks=1, penetration_percentage=100)
+		player = Player()
+		for card in new_shoe.shoe:
+			eve.evaluate_card_value(
+				person=player,
+				card=card
+				)
+		self.assertEqual(player.score, 340)
+
 
 	def test_hi_lo(self):
 		counts = Count()
+		new_shoe = Shoe(number_of_decks=2, penetration_percentage=65)
 
-		counts.count_card('Jd')
-		counts.count_card('Qh')
-		counts.count_card('Ks')
-		counts.count_card('Ah')
-		counts.count_card('1c')
+		for x in ['1c','Jd','Qh','Ks','Ah']:
+			counts.count_card(x)
 		self.assertEqual(counts.count, 5)
+		self.assertEqual(new_shoe.deck_count, 2)
 
-		counts.count_card('2d')
-		counts.count_card('3h')
-		counts.count_card('4s')
-		counts.count_card('5h')
-		counts.count_card('6c')
+		for x in ['2d','3h','4s','5h','6c']:
+			counts.count_card(x)
 		self.assertEqual(counts.count, 0)
 
-		counts.count_card('7d')
-		counts.count_card('8h')
-		counts.count_card('9s')
-		counts.count_card('8h')
-		counts.count_card('7c')
+		for x in ['7d','8h','9s','8h','7c']:
+			counts.count_card(x)
 		self.assertEqual(counts.count, 0)
 

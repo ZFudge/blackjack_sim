@@ -8,18 +8,25 @@ class Evaluate():
 		pass
 
 
-	def evaluate(self, c1, c2):
-		v1 = self.get_value(c1)
-		v2 = self.get_value(c2)
-		val_list = [v1, v2]
-		if self.check_ints(val_list):
-			return v1 + v2
-		else:
-			return self.pack_list(val_list)
+	def evaluate_card_value(self, person, card):
+		card = card[0]
+		card_value = self.get_value(card)
 
+		value_list = [person.score, card_value]
+
+		if Evaluate.all_ints(value_list):
+			person.score += card_value
+		elif Evaluate.all_lists(value_list):
+			person.score = [ x + 1 for x in person.score]
+		else:
+			person.score = Evaluate.pack_list(value_list)
+
+		# Evaluate.check_bust(person.score)
+
+	# def check_bust():
+		# pass
 
 	def get_value(self, card):
-		card = card[0]
 		if card in Evaluate.high_values:
 			value = Evaluate.high_values[card]
 		else:
@@ -27,23 +34,29 @@ class Evaluate():
 		return value
 
 
-	def pack_list(self, lst):
-		if type(lst[0]) is list:
-			target_list = lst[0]
-			add_val = lst[1]
-		else:
-			target_list = lst[1]
-			add_val = lst[0]
-		return [ x + add_val for x in target_list]
+	@staticmethod
+	def all_ints(value_list):
+		return all([ type(x) is int for x in value_list])
 
 
-	def check_ints(self, lst):
-		is_int_list = self.get_types(lst)
-		return all(is_int_list)
+	@staticmethod
+	def all_lists(value_list):
+		return all([ type(x) is list for x in value_list])
 
 
-	def get_types(self, lst):
-		return [ type(x) is int for x in lst]
+	@staticmethod
+	def pack_list(value_list):
+		value_list = sorted(value_list, key=lambda x: type(x) is list)
+		cval = value_list[0]
+		lst = value_list[1]
+		lst = [ x + cval for x in lst]
+		return Evaluate.check_values(lst)
+
+	@staticmethod
+	def check_values(lst):
+		if max(lst) > 21:
+			return min(lst)
+		return lst
 
 
 def main():
