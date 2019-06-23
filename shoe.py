@@ -13,7 +13,7 @@ class Shoe():
 
 
 	@property
-	def deck_count(self):
+	def size(self):
 		return round(len(self.shoe) / (self.penetration_percentage / 100 * 52))
 
 

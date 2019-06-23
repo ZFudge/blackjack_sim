@@ -1,43 +1,23 @@
-from cards import card_value
+from cards import card_values
 
 class Hi_Lo():
 
-	card_value = card_value
+	card_values = card_values
 
 	def __init__(self):
 		self._count = 0
 		self._true_count = 0
-
-
-	# def count_cards(self, card):
-	# 	card = card[0]
-	# 	self.count += self.count(card)
-
-
-	# def deck_size_to_true_count(self, deck_size):
-	# 	self.true_count = self.count / deck_size
-
-
-	# @classmethod
-	# def count(cls, card):
-	# 	cards = cls.counts['cards']
-	# 	if card in cards['lo']:
-	# 		count = 'lo'
-	# 	elif card in cards['md']:
-	# 		count = 'md'
-	# 	elif card in cards['hi']:
-	# 		count = 'hi'
-	# 	return cls.counts['values'][count]
-
 
 	@property
 	def count(self):
 		return self._count
 
 	@count.setter
-	def count(self, card):
+	def count(self, card_shoesize):
+		card, shoesize = card_shoesize
 		card = card[0]
-		self._count += card_value[card]
+		self._count += card_values[card]
+		self.true_count = shoesize
 
 	@property
 	def true_count(self):

@@ -5,11 +5,14 @@ from hi_lo import Hi_Lo
 
 class Person(Evaluate):
 	def __init__(self):
-		self.score = 0
 		self.hand = []
+		self.score = 0
+
 
 	def new_hand(self):
 		self.hand = []
+		self.score = 0
+
 
 	def evaluate(self, card):
 		card = card[0]
@@ -24,12 +27,15 @@ class Dealer(Person):
 		for x in range(num_of_cards):
 			card = shoe.draw()
 			person.hand.append(card)
-			person.evaluate(evaluate_card_value)
+			person.evaluate(card)
+			if isinstance(person, Player):
+				person.count = [card, shoe.size]
 
 
-class Player(Person):
+class Player(Person, Hi_Lo):
 	def __init__(self, bankroll=1000, bet_unit=5, bet_spread=12):
 		Person.__init__(self)
+		Hi_Lo.__init__(self)
 		self._bankroll = bankroll
 		self._bet_unit = bet_unit
 		self._bet_spread = bet_spread
@@ -58,3 +64,9 @@ class Player(Person):
 	@bet_spread.setter
 	def bet_spread(self, value):
 		self._bet_spread = value
+
+def main():
+	pass
+
+if __name__ == '__main__':
+	main()
