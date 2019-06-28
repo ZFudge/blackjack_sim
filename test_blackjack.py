@@ -12,26 +12,26 @@ from blackjack import Blackjack
 class BlackjackTest(unittest.TestCase):
 
 	def test_create_deck(self):
-		new_shoe = Shoe()
-		self.assertEqual(len(new_shoe.shoe), 270)
-		# print(new_shoe.shoe)
+		shoe = Shoe()
+		self.assertEqual(len(shoe.shoe), 270)
+		# print(shoe.shoe)
 
 
 	def test_draw(self):
-		new_shoe = Shoe()
-		for x in range(len(new_shoe.shoe)):
-			card = new_shoe.draw()
+		shoe = Shoe()
+		for x in range(len(shoe.shoe)):
+			card = shoe.draw()
 			self.assertEqual(len(card), 2)
-		self.assertEqual(len(new_shoe.shoe), 270)
+		self.assertEqual(len(shoe.shoe), 270)
 
 
 	def test_evaluation(self):
-		new_shoe = Shoe(
+		shoe = Shoe(
 			number_of_decks=1,
 			penetration_percentage=100
 			)
 		player = Player()
-		for card in new_shoe.shoe:
+		for card in shoe.shoe:
 			player.evaluate(card=card)
 		self.assertEqual(player.score, 340)
 
@@ -39,7 +39,7 @@ class BlackjackTest(unittest.TestCase):
 	def test_hi_lo(self):
 		counts = Hi_Lo()
 
-		new_shoe = Shoe(
+		shoe = Shoe(
 			number_of_decks=2,
 			penetration_percentage=65
 			)
@@ -47,21 +47,21 @@ class BlackjackTest(unittest.TestCase):
 		self.assertEqual(counts.count, 0)
 
 		for card in ['1c','Jd','Qh','Ks','Ah']:
-			counts.count = [card, new_shoe.size]
+			counts.count = [card, shoe.size]
 		self.assertEqual(counts.count, -5)
 
-		self.assertEqual(new_shoe.size, 2)
+		self.assertEqual(shoe.size, 2)
 
 		for card in ['2d','3h','4s','5h','6c']:
-			counts.count = [card, new_shoe.size]
+			counts.count = [card, shoe.size]
 		self.assertEqual(counts.count, 0)
 
 		for card in ['7d','8h','9s','8h','7c']:
-			counts.count = [card, new_shoe.size]
+			counts.count = [card, shoe.size]
 		self.assertEqual(counts.count, 0)
 
 		for card in ['2d','3h','4s','5h','6c']:
-			counts.count = [card, new_shoe.size]
+			counts.count = [card, shoe.size]
 		self.assertEqual(counts.count, 5)
 
 

@@ -11,4 +11,3 @@ card_values.update(dict.fromkeys(['1', 'J', 'Q', 'K', 'A'], -1))
 
 high_values = dict.fromkeys(['1', 'J', 'Q', 'K'], 10)
 high_values['A'] = [1, 11]
-

@@ -1,7 +1,6 @@
 from cards import card_values
 
 class Hi_Lo():
-
 	card_values = card_values
 
 	def __init__(self):

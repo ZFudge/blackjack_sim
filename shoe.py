@@ -1,8 +1,8 @@
 from cards import single_deck as single_deck_list
 import random
 
-class Shoe():
 
+class Shoe():
 	single_deck = single_deck_list
 
 	def __init__(self, number_of_decks=8, penetration_percentage=65):
@@ -10,31 +10,6 @@ class Shoe():
 		self._number_of_decks = number_of_decks
 		self._penetration_percentage = penetration_percentage
 		self.new_shoe()
-
-
-	@property
-	def size(self):
-		return round(len(self.shoe) / (self.penetration_percentage / 100 * 52))
-
-
-	@property
-	def number_of_decks(self):
-		return self._number_of_decks
-
-
-	@number_of_decks.setter
-	def number_of_decks(self, value):
-		self._number_of_decks = value
-
-
-	@property
-	def penetration_percentage(self):
-		return self._penetration_percentage
-
-
-	@penetration_percentage.setter
-	def penetration_percentage(self, value):
-		self._penetration_percentage = value
 
 
 	def draw(self):
@@ -50,6 +25,27 @@ class Shoe():
 		self.shoe += penetrated_decks
 
 
+	@property
+	def size(self):
+		return round(len(self.shoe) / (self.penetration_percentage / 100 * 52))
+
+	@property
+	def number_of_decks(self):
+		return self._number_of_decks
+
+	@number_of_decks.setter
+	def number_of_decks(self, value):
+		self._number_of_decks = value
+
+
+	@property
+	def penetration_percentage(self):
+		return self._penetration_percentage
+
+	@penetration_percentage.setter
+	def penetration_percentage(self, value):
+		self._penetration_percentage = value
+
 	@staticmethod
 	def shuffle(deck):
 		deck_length = len(deck)
@@ -60,7 +56,6 @@ class Shoe():
 			inverted_index = abs(index - deck_length)
 			deck = [mid_card] + deck[:inverted_index] + [end_card] + deck[inverted_index:]
 		return deck
-
 
 	@staticmethod
 	def penetrate(deck, percentage):
