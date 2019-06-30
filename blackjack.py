@@ -13,7 +13,7 @@ class Blackjack():
 		self.log_hands()
 		self.make_moves()
 		self.dealer.compare_people(self.people)
-		self.next_round_check()
+		return self.next_round_check()
 
 
 	def initial_deal(self):
@@ -30,14 +30,14 @@ class Blackjack():
 
 	def make_moves(self):
 		self.player.move()
-		if not self.player.busted:
+		if not self.player.busts:
 			self.dealer.move()
 
 
 	def next_round_check(self):
 		if self.player.use_basic_strategy or self.manual_round_check():
 			self.new_round()
-			self.game()
+			return True
 
 
 	def manual_round_check(self):
@@ -64,7 +64,8 @@ class Blackjack():
 
 def main():
 	bkjk = Blackjack()
-	bkjk.game()
+	while bkjk.game():
+		continue
 
 if __name__ == '__main__':
 	main()
