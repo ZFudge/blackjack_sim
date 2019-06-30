@@ -29,7 +29,7 @@ class Person(Evaluate):
 
 	def hit(self):
 		if len(self.hand) > 2:
-			print(f'{self.__class__.__name__} hits.')
+			print(f'{self.name} hits.')
 		card = self.shoe.draw()
 		self.hand.append(card)
 		self.evaluate(card)
@@ -37,20 +37,30 @@ class Person(Evaluate):
 
 
 	def stand(self):
-		print(f'{self.__class__.__name__} stands.')
+		print(f'{self.name} stands.')
+
 
 	def score_formatted(self):
-		# print(self.score)
 		if type(self.score) is list:
 			return '/'.join([str(x) for x in self.score])
 		else:
 			return self.score
 
+
 	def hand_formatted(self):
 		return ', '.join(self.hand)
 
+
 	def log_hand(self):
-		print(f'{self.__class__.__name__} hand: {self.hand_formatted()} -> {self.score_formatted()}')
+		print(f'{self.name} hand: {self.hand_formatted()} -> {self.score_formatted()}')
+
+
+	def check_if_busted(self):
+		self.busted = self.max_score > 21
+		if self.busted:
+			print(f'{self.name} busts!')
+		return self.busted
+
 
 	@property
 	def max_score(self):
@@ -59,13 +69,9 @@ class Person(Evaluate):
 		else:
 			return max(self.score)
 
-	def check_if_busted(self):
-		bust = self.max_score > 21
-		if bust:
-			self.busted = True
-			print(f'{self.__class__.__name__} busts!')
-		return bust
-
+	@property
+	def name(self):
+		return self.__class__.__name__
 
 class Dealer(Person):
 	def __init__(self, stand_on_soft_17=True, **kwargs):
@@ -73,30 +79,52 @@ class Dealer(Person):
 		self._stand_on_soft_17 = stand_on_soft_17
 
 
-	def deal(self, person, num_of_cards=1):
+	@staticmethod
+	def deal(person, num_of_cards=1):
 		for x in range(num_of_cards):
 			person.hit()
 
+
 	def move(self):
-		if self.max_score < 17 or (self.max_score == 17 and not self.stand_on_soft_17):
+		if self.check_continuation():
 			self.hit()
 			self.log_hand()
+			self.check_next_choice()
 		else:
 			self.stand()
 
 
-	def compare(self, persons):
+	def check_continuation(self):
+		if self.stand_on_soft_17 or type(self.score) is int:
+			return self.max_score < 17
+		else:
+			return self.max_score <= 17
+
+
+	def check_next_choice(self):
+		busted = self.check_if_busted()
+		if not busted:
+			self.move()
+
+
+	def compare_people(self, persons):
 		self.check_if_busted()
-		dealer_bust = self.busted
 		for person in persons:
 			if not isinstance(person, self.__class__):
-				if dealer_bust or person.max_score > self.max_score:
-					person.win()
-				elif person.max_score == self.max_score:
-					person.draw()
-				else:
-					person.lose()
-				# person.log_hand()
+				self.compare_to_dealer(person)
+
+
+	def compare_to_dealer(self, person):
+		player_bust = person.check_if_busted()
+		if not player_bust:
+			if self.busted or person.max_score > self.max_score:
+				person.win()
+			elif person.max_score == self.max_score:
+				person.draw()
+			else:
+				person.lose()
+		else:
+			person.lose()
 
 
 	@property
@@ -111,22 +139,72 @@ class Player(Person, Hi_Lo):
 		self._use_basic_strategy = use_basic_strategy
 		self._bankroll = bankroll
 		self._bet_unit = bet_unit
-		self._bet = bet_unit
+		self._bet = 0
 		self._bet_spread = bet_spread
+
+
+	def make_a_bet(self):
+		self.log_bankroll()
+		if self.use_basic_strategy:
+			self.true_count_bet()
+		else:
+			if self.bet == 0 or self.check_new_bet():
+				self.manual_bet()
+		print(f'Player bets: ${self.bet}')
+
+
+	def log_bankroll(self):
+		print(f'Bankroll: ${self.bankroll}')
+
+
+	@staticmethod
+	def check_new_bet():
+		choices = ['', 'y', 'ys', 'yes', 'n', 'no']
+		new_bet = '"'
+		while new_bet not in choices:
+			print('New bet?', end='')
+			new_bet = input().lower().strip()
+		return new_bet in choices[:-2]
+
+
+	def true_count_bet(self):
+		tc = self.true_count
+		if tc > 1:
+			self.bet = self.bet_unit * self.true_count
+		else:
+			self.bet = self.bet_unit
+
+
+	def manual_bet(self):
+		self.bet = Player.input_bet()
+
+
+	@staticmethod
+	def input_bet():
+		bet = 0
+		while bet < 5:
+			print('Make a bet: $', end='')
+			bet = int(input())
+		return bet
 
 
 	def move(self):
 		if self.use_basic_strategy:
-			pass
+			self.basic_strategy_move()
 		else:
-			print('Make a move: h -> hit, s -> stand') # , d -> double, p -> split
-			move_choice = self.get_choice()
+			move_choice = self.manual_move()
 		self.evaluate_move(move_choice)
 
 
-	def get_choice(self):
+	def basic_strategy_move(self):
+		pass
+
+
+	@staticmethod
+	def manual_move():
 		move_choice = ''
 		while move_choice not in ['h', 's']: # 'd', 'p'
+			print('Make a move (h -> hit, s -> stand): ', end='') # , d -> double, p -> splitil
 			move_choice = input().lower().strip()
 		return move_choice
 
@@ -134,17 +212,25 @@ class Player(Person, Hi_Lo):
 	def evaluate_move(self, move_choice):
 		if move_choice == 'h':
 			self.hit()
-			self.log_hand()
-			if self.check_if_busted():
-				self.lose()
-			else:
-				self.move()
 		elif move_choice == 's':
 			self.stand()
 		elif move_choice == 'd':
 			self.double()
 		elif move_choice == 'p':
 			self.split()
+
+	def hit(self):
+		card = super().hit()
+		self.count = [card, self.shoe.size]
+		if len(self.hand) > 2:
+			self.post_voluntary_hit()
+
+	def post_voluntary_hit(self):
+		self.log_hand()
+		if self.check_if_busted():
+			self.lose()
+		else:
+			self.move()
 
 
 	def double(self):
@@ -154,38 +240,31 @@ class Player(Person, Hi_Lo):
 	def split(self):
 		pass
 
-	# def log_hand(self):
-	# 	super().log_hand()
-	# 	if len(self.hand) == 2:
-	# 		print(f'Current bet: ${self.bet}, Bankroll: ${self.bankroll}')
-
-	def end_round(self, result='draw', difference=0):
-		print(f'Player {result}')
-		self.bankroll_increment = difference
 
 	def win(self):
-		print(f'Player wins ${self.bet}!')
-		self.bankroll_increment = self.bet_unit
+		# print(f'Player wins ${self.bet}!')
+		self.end_round(result='wins', difference=self.bet)
+		# self.bankroll_increment = self.bet
+		# self.log_bankroll()
+
+
+	def lose(self):
+		# print(f'Player loses ${self.bet}!')
+		self.end_round(result='loses', difference=-self.bet)
+		# self.bankroll_increment = -self.bet
+		# self.log_bankroll()
+
+
+	def end_round(self, result='draw', difference=0):
+		self.bankroll_increment = difference
+		difference = f"{'-' if difference < 0 else '+'}${abs(difference)}"
+		print(f'Player {result}! {difference}')
+		self.log_bankroll()
+
 
 	def draw(self):
 		print('Draw.')
 
-	def lose(self):
-		print(f'Player loses ${self.bet}!')
-		self.bankroll_increment = -self.bet_unit
-
-	def make_a_bet(self):
-		print(f'Bankroll: ${self.bankroll}')
-		if self.use_basic_strategy:
-			tc = self.true_count
-			if tc > 1:
-				self._bet = self.bet_unit * self.true_count
-			else:
-				self._bet = self.bet_unit
-		else:
-			print('Make a bet')
-			new_bet = input()
-		print(f'Player bets: ${self._bet}')
 
 	@property
 	def bet(self):
@@ -193,15 +272,10 @@ class Player(Person, Hi_Lo):
 
 	@bet.setter
 	def bet(self, value):
-		if type(value) in [int, float]:
+		if type(value) in [int,float]:
 			self._bet = value
 		else:
 			raise ValueError('Bet must be int or float.')
-
-	def hit(self):
-		card = super().hit()
-		self.count = [card, self.shoe.size]
-
 
 	@property
 	def use_basic_strategy(self):
