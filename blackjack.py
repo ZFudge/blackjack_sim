@@ -1,65 +1,79 @@
 from player import Player, Dealer
 
+from inputs import ask_for_another_round
+
 class Blackjack():
-	def __init__(self, use_basic_strategy=False, stand_on_soft_17=True):
+	def __init__(self, use_basic_strategy=False, stand_on_soft_17=True, num_players=1):
 		self.dealer = Dealer(stand_on_soft_17=stand_on_soft_17)
-		self.player = Player(use_basic_strategy=use_basic_strategy)
-		self.people = [self.dealer, self.player]
+		self.players = []
+		for x in range(num_players):
+			self.players.append(Player(use_basic_strategy=use_basic_strategy, name=x+1))
+			if x == 0 and use_basic_strategy is False:
+				use_basic_strategy = True
 
 
 	def game(self):
-		self.player.make_a_bet()
+		self.bets()
 		self.initial_deal()
 		self.log_hands()
 		self.make_moves()
-		self.dealer.compare_people(self.people)
+		self.dealer.compare_people(self.no_bust_players())
 		return self.next_round_check()
 
 
+	def bets(self):
+		for player in self.players:
+			player.make_a_bet()
+
+
 	def initial_deal(self):
-		num_cards = 1
-		for person in self.people:
-			self.dealer.deal(person=person, num_of_cards=num_cards)
-			num_cards += 1
+		self.dealer.hit()
+		for player in self.players:
+			player.hit(num_hits=2)
 
 
 	def log_hands(self):
-		for person in self.people:
+		self.dealer.log_hand()
+		for person in self.players:
 			person.log_hand()
 
 
 	def make_moves(self):
-		self.player.move()
-		if not self.player.busts:
+		for player in self.players:
+			player.move()
+		if self.all_players_bust() is False:
 			self.dealer.move()
+		else:
+			self.dealer.discard()
+
+
+	def all_players_bust(self):
+		busts = [player.busts for player in self.players]
+		return all(busts)
+
+
+	def no_bust_players(self):
+		return filter(lambda player: not player.busts, self.players)
 
 
 	def next_round_check(self):
-		if self.player.use_basic_strategy or self.manual_round_check():
+		if self.players[0].use_basic_strategy or self.manual_round_check():
 			self.new_round()
 			return True
 
 
 	def manual_round_check(self):
-		answer = self.get_answer()
-		if answer.startswith('y'):
+		answer = ask_for_another_round()
+		if answer.startswith('y') or answer == '':
 			return True
 		else:
 			print('Bye.')
 
 
-	@staticmethod
-	def get_answer():
-		answer = ''
-		while answer not in ['y', 'ys', 'yes', 'n', 'no']:
-			print('Play another round?: ', end='')
-			answer = input().lower().strip()
-		return answer
-
-
 	def new_round(self):
-		for person in self.people:
-			person.new_hand()
+		self.dealer.new_hand()
+		for player in self.players:
+			player.new_hand()
 
 
 def main():
