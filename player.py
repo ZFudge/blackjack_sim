@@ -32,7 +32,7 @@ class Person(Evaluate):
 	def hit(self):
 		card = self.shoe.draw()
 		self.hand.append(card)
-		if len(self.hand) > 2:# or (len(self.hand) == 2 and self.name.startswith('D')):
+		if len(self.hand) > 2:
 			print(f'{self.name} hits.')
 		self.evaluate(card)
 		return card
@@ -193,6 +193,7 @@ class Player(Person, Hi_Lo):
 		self._bet_spread = bet_spread
 		self._bet = 0
 		self._double = False
+		# todo self.split_hands = []
 
 
 	def make_a_bet(self):
@@ -227,11 +228,11 @@ class Player(Person, Hi_Lo):
 
 	def move(self):
 		blackjack = super().move()
-		if blackjack is False:
+		if blackjack is False and self.double is False:
 			if self.use_basic_strategy:
 				self.basic_strategy_move()
 			else:
-				move_choice = manual_move()
+				move_choice = manual_move(self.available_moves())
 			self.evaluate_move(move_choice)
 
 
@@ -272,6 +273,9 @@ class Player(Person, Hi_Lo):
 		else:
 			self.move()
 
+	def surrender(self):
+		pass
+
 
 	def split(self):
 		pass
@@ -296,9 +300,30 @@ class Player(Person, Hi_Lo):
 		print('Draw.')
 
 
+	def available_moves(self):
+		moves = ['[h]it', '[s]tand']
+		double = '[d]ouble'
+		split = 's[p]lit'
+		surrender = 'su[r]render'
+
+		if len(self.hand) == 2:
+			moves.append(surrender)
+			if self.can_double():
+				moves.append(double)
+			if self.can_split():
+				moves.append(split)
+		return  {
+			'short': [move[move.index('[')+1][0:] for move in moves],
+			'long': ', '.join(moves)
+		}
+
+
+	def can_double(self):
+		return self.bet * 2 <= self.bankroll
+
+
 	def can_split(self):
-		if len(self.hand):
-			return self.hand[0] == self.hand[1]
+		return self.hand[0] == self.hand[1]
 
 
 	@property
@@ -314,8 +339,8 @@ class Player(Person, Hi_Lo):
 		if type(value) is bool:
 			self._double = value
 			if self._double is True:
-				print(f'{self.name} doubles!')
 				self.bet *= 2
+				print(f'{self.name} doubles: ${self.bet}')
 			else:
 				self.bet /= 2
 		else:
