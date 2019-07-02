@@ -19,12 +19,14 @@ def check_same_bet():
 
 
 def input_bet(bankroll):
-	bet = 0
-	while bet < 1 or bet > bankroll:
+	bet = None
+	while bet is None or bet < 1 or bet > bankroll:
 		print('Make a bet: $', end='')
-		bet = re.sub('[^0-9]','', input())
-		if len(bet) == 0:
-			bet = 0
+		bet = input()
+		bet = bet[:bet.index('.')]
+		bet = re.sub('[^0-9]','', bet)
+		if bet == '':
+			bet = None
 		else:
 			bet = int(bet)
 			if bet > bankroll:
@@ -32,11 +34,12 @@ def input_bet(bankroll):
 	return bet
 
 
-def manual_move():
-	choices = ['', 'h', 's', 'd', 'p']
+def manual_move(options):
+	choices = [''] + options['short']
+	lng = options['long']
 	move_choice = '"'
 	while move_choice not in choices: # , 'p'
-		print('Make a move ([h]it, [s]tand, [d]ouble): ', end='') # , s[p]lit
+		print(f'Make a move ({lng}): ', end='') # , s[p]lit
 		move_choice = input().lower().strip()
 	return move_choice[:2]
 
