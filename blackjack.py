@@ -17,7 +17,7 @@ class Blackjack():
 		self.initial_deal()
 		self.log_hands()
 		self.make_moves()
-		self.dealer.compare_people(self.no_bust_players())
+		self.dealer.compare_people(self.get_no_bust_players())
 		return self.next_round_check()
 
 
@@ -39,7 +39,7 @@ class Blackjack():
 
 
 	def make_moves(self):
-		for player in self.players:
+		for player in self.non_bankrupt_players():
 			player.move()
 		if self.all_players_bust() is False:
 			self.dealer.move()
@@ -47,19 +47,28 @@ class Blackjack():
 			self.dealer.discard()
 
 
+	def non_bankrupt_players(self):
+		return filter(lambda player: player.bankroll > 0, self.players)
+
+
 	def all_players_bust(self):
 		busts = [player.busts for player in self.players]
 		return all(busts)
 
 
-	def no_bust_players(self):
+	def get_no_bust_players(self):
 		return filter(lambda player: not player.busts, self.players)
 
 
 	def next_round_check(self):
-		if self.players[0].use_basic_strategy or self.manual_round_check():
+		if not self.players_broke() and (self.players[0].use_basic_strategy or self.manual_round_check()):
 			self.new_round()
 			return True
+
+
+	def players_broke(self):
+		broke = [player.bankroll == 0 for player in self.players]
+		return all(broke)
 
 
 	def manual_round_check(self):

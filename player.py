@@ -289,7 +289,7 @@ class Player(Person, Hi_Lo):
 		self.end_round(result='loses', difference=-self.bet)
 
 
-	def end_round(self, result='draw', difference=0):
+	def end_round(self, result, difference=0):
 		self.bankroll_increment = difference
 		difference = f"{'-' if difference < 0 else '+'}${abs(difference)}"
 		print(f'{self.name} {result}! {difference}')
@@ -297,7 +297,8 @@ class Player(Person, Hi_Lo):
 
 
 	def draw(self):
-		print('Draw.')
+		print('Push.')
+		self.log_bankroll()
 
 
 	def available_moves(self):

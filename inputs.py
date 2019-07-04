@@ -23,7 +23,8 @@ def input_bet(bankroll):
 	while bet is None or bet < 1 or bet > bankroll:
 		print('Make a bet: $', end='')
 		bet = input()
-		bet = bet[:bet.index('.')]
+		if '.' in bet:
+			bet = bet[:bet.index('.')]
 		bet = re.sub('[^0-9]','', bet)
 		if bet == '':
 			bet = None
