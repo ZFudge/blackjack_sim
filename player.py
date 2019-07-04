@@ -193,6 +193,8 @@ class Player(Person, Hi_Lo):
 		self._bet_spread = bet_spread
 		self._bet = 0
 		self._double = False
+		self._surrendered = False
+
 		# todo self.split_hands = []
 
 
@@ -249,6 +251,8 @@ class Player(Person, Hi_Lo):
 			self.stand()
 		elif move_choice == 'p':
 			self.split()
+		elif move_choice == 'r':
+			self.surrender()
 
 
 	def hit(self, num_hits=1):
@@ -264,6 +268,8 @@ class Player(Person, Hi_Lo):
 		super().new_hand()
 		if self.double:
 			self.double = False
+		if self.surrendered:
+			self.surrendered = False
 
 
 	def post_voluntary_hit(self):
@@ -272,9 +278,6 @@ class Player(Person, Hi_Lo):
 			self.lose()
 		else:
 			self.move()
-
-	def surrender(self):
-		pass
 
 
 	def split(self):
@@ -287,6 +290,11 @@ class Player(Person, Hi_Lo):
 
 	def lose(self):
 		self.end_round(result='loses', difference=-self.bet)
+
+
+	def surrender(self):
+		self.surrendered = True
+		self.end_round(result='surrenders', difference=self.bet / -2)
 
 
 	def end_round(self, result, difference=0):
@@ -346,6 +354,18 @@ class Player(Person, Hi_Lo):
 				self.bet /= 2
 		else:
 			raise ValueError(f'Double value must be a boolean. Received {type(value)}')
+
+	@property
+	def surrendered(self):
+		return self._surrendered
+
+	@surrendered.setter
+	def surrendered(self, value):
+		if type(value) is bool:
+			self._surrendered = value
+		else:
+			raise ValueError(f'Surrender value must be a boolean. Received {type(value)}')
+
 
 	@property
 	def bet(self):
