@@ -17,7 +17,7 @@ class Blackjack():
 		self.initial_deal()
 		self.log_hands()
 		self.make_moves()
-		self.dealer.compare_people(self.get_no_bust_unsurrendered_players())
+		self.dealer.compare_players(self.get_no_bust_unsurrendered_players())
 		return self.next_round_check()
 
 
@@ -41,7 +41,7 @@ class Blackjack():
 	def make_moves(self):
 		for player in self.non_bankrupt_players():
 			player.move()
-		if self.all_players_bust() is False and self.all_players_surrender() is False:
+		if (not self.all_players_bust() and not self.all_players_surrender()) or self.valid_splits_present():
 			self.dealer.move()
 		else:
 			self.dealer.discard()
@@ -60,9 +60,18 @@ class Blackjack():
 		surrenders = [player.surrendered for player in self.players]
 		return all(surrenders)
 
+	def valid_splits_present(self):
+		valids = []
+		for player in self.players:
+			valids.append(player.valid_splits())
+		return any(valids)
+
 
 	def get_no_bust_unsurrendered_players(self):
-		return filter(lambda player: player.busts is False and player.surrendered is False, self.players)
+		return filter(
+			lambda player: (player.busts is False and player.surrendered is False) or player.valid_splits(),
+			self.players
+			)
 
 
 	def next_round_check(self):
@@ -87,7 +96,7 @@ class Blackjack():
 	def new_round(self):
 		self.dealer.new_hand()
 		for player in self.players:
-			player.new_hand()
+			player.new_hand(hard=True)
 
 
 def main():

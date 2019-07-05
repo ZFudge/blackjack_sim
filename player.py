@@ -33,7 +33,7 @@ class Person(Evaluate):
 		card = self.shoe.draw()
 		self.hand.append(card)
 		if len(self.hand) > 2:
-			print(f'{self.name} hits.')
+			print(f'{self.name} hits. ', end='')
 		self.evaluate(card)
 		return card
 
@@ -144,11 +144,15 @@ class Dealer(Person):
 			self.move()
 
 
-	def compare_people(self, persons):
+	def compare_players(self, players):
 		if not self.busts:
 			self.check_if_busted()
-		for person in persons:
-			self.compare_to_dealer(person)
+		for player in players:
+			self.compare_to_dealer(player)
+			if player.split_results:
+				for result in player.split_results:
+					player.revisit_split(result)
+					self.compare_to_dealer(player)
 
 
 	def compare_to_dealer(self, person):
@@ -194,8 +198,8 @@ class Player(Person, Hi_Lo):
 		self._bet = 0
 		self._double = False
 		self._surrendered = False
-
-		# todo self.split_hands = []
+		self.split_hands = []
+		self.split_results = []
 
 
 	def make_a_bet(self):
@@ -236,6 +240,8 @@ class Player(Person, Hi_Lo):
 			else:
 				move_choice = manual_move(self.available_moves())
 			self.evaluate_move(move_choice)
+			if self.split_hands:
+				self.iterate_splits()
 
 
 	def basic_strategy_move(self):
@@ -264,12 +270,14 @@ class Player(Person, Hi_Lo):
 			self.hit(num_hits-1)
 
 
-	def new_hand(self):
+	def new_hand(self, hard=False):
 		super().new_hand()
 		if self.double:
 			self.double = False
 		if self.surrendered:
 			self.surrendered = False
+		if hard:
+			self.split_results = []
 
 
 	def post_voluntary_hit(self):
@@ -281,7 +289,68 @@ class Player(Person, Hi_Lo):
 
 
 	def split(self):
-		pass
+		print(f'{self.name} splits!')
+		self.split_hands.append(self.hand.pop())
+		self.split_score()
+		self.hit()
+		self.log_hand()
+		self.move()
+
+
+	def split_score(self):
+		if type(self.score) is list:
+			self.score = [1, 11]
+		else:
+			self.score = int(self.score / 2)
+
+
+	def can_split(self):
+		return self.hand[0][0] == self.hand[1][0]
+
+
+	def split_record(self):
+		result =  {
+			'score': self.score,
+			# 'double': self.double,
+			'bet': self.bet,
+			'busts': self.busts
+		}
+		self.split_results.append(result)
+		print(f"Previous split score: {result['score']}, bet: {result['bet']}")
+
+
+	def log_hand(self):
+		super().log_hand()
+		if self.split_hands:
+			print(f'Splits: {self.split_hands}')
+
+
+	def iterate_splits(self):
+		print(f'Iterating {len(self.split_hands)} split(s).')
+		self.split_record()
+		self.new_hand()
+		card = self.split_hands.pop()
+		self.hand.append(card)
+		self.evaluate(card)
+		self.hit()
+		self.log_hand()
+		self.move()
+
+
+	def revisit_split(self, results):
+		self.score = results['score']
+		self.bet = results['bet']
+		self.busts = results['busts']
+
+
+	def no_splits(self):
+		if not self.split_results:
+			return True
+
+
+	def valid_splits(self):
+		valids = [ x['busts'] is False for x in self.split_results]
+		return any(valids)
 
 
 	def win(self):
@@ -300,7 +369,7 @@ class Player(Person, Hi_Lo):
 	def end_round(self, result, difference=0):
 		self.bankroll_increment = difference
 		difference = f"{'-' if difference < 0 else '+'}${abs(difference)}"
-		print(f'{self.name} {result}! {difference}')
+		print(f'  {self.name} {result}! {difference}')
 		self.log_bankroll()
 
 
@@ -329,10 +398,6 @@ class Player(Person, Hi_Lo):
 
 	def can_double(self):
 		return self.bet * 2 <= self.bankroll
-
-
-	def can_split(self):
-		return self.hand[0] == self.hand[1]
 
 
 	@property
