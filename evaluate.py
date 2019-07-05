@@ -11,8 +11,10 @@ class Evaluate():
 			return score + card_value
 		elif Evaluate.all_lists(value_list):
 			return Evaluate.prune_gt21_list([ x + 1 for x in score])
-		else:
+		elif Evaluate.mix_int_and_list(value_list):
 			return Evaluate.pack_list(value_list)
+		else:
+			raise ValueError(f'Score types can only include int and list. Current types include {[type(x) for x in value_list]}')
 
 
 	def get_value(self, card):
@@ -36,6 +38,11 @@ class Evaluate():
 	@staticmethod
 	def all_lists(value_list):
 		return all([ type(x) is list for x in value_list])
+
+	@staticmethod
+	def mix_int_and_list(value_list):
+		types = [ type(x) for x in value_list]
+		return int in types and list in types
 
 	@staticmethod
 	def pack_list(value_list):
