@@ -24,7 +24,10 @@ class Hi_Lo():
 
 	@true_count.setter
 	def true_count(self, deck_count):
-		self._true_count = self._count / deck_count
+		if deck_count > 0:
+			self._true_count = self._count / deck_count
+		else:
+			self._true_count = self._count
 
 def main():
 	pass
