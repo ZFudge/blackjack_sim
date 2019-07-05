@@ -117,10 +117,13 @@ class Dealer(Person):
 	def __init__(self, stand_on_soft_17=True, **kwargs):
 		Person.__init__(self, **kwargs)
 		self._stand_on_soft_17 = stand_on_soft_17
+		self._hidden_card = None
 
 
 	def move(self):
 		blackjack = super().move()
+		if self.hidden_card:
+			self.reveal_card()
 		if blackjack is False:
 			if self.check_continuation():
 				self.hit()
@@ -168,22 +171,47 @@ class Dealer(Person):
 			person.lose()
 
 
-	def discard(self):
-		card = self.shoe.draw()
+	def reveal_card(self):
+		card = self.hidden_card
+		self.hidden_card = None
 		self.hand.append(card)
 		self.evaluate(card)
 		self.log_hand()
-
 
 	def hand_formatted(self):
 		if len(self.hand) == 1:
 			return ', '.join(self.hand + ['*'])
 		return ', '.join(self.hand)
 
+	def new_hand(self, hard=False):
+		super().new_hand()
+		self.hidden_card = None
+
+
+	def hit(self):
+		super().hit()
+		if len(self.hand) == 1:
+			self.hidden_hit()
+
+
+	def hidden_hit(self):
+		card = self.shoe.draw()
+		self.hidden_card = card
+
 
 	@property
 	def stand_on_soft_17(self):
 		return self._stand_on_soft_17
+
+	@property
+	def hidden_card(self):
+		return self._hidden_card
+
+	@hidden_card.setter
+	def hidden_card(self, value):
+		if value is None or (type(value) is str and len(value) == 2):
+			self._hidden_card = value
+
 
 
 class Player(Person, Hi_Lo):
@@ -261,13 +289,14 @@ class Player(Person, Hi_Lo):
 			self.surrender()
 
 
-	def hit(self, num_hits=1):
+	def hit(self):
 		card = super().hit()
 		self.count = [card, self.shoe.size]
-		if len(self.hand) > 2:
+		hand_length = len(self.hand)
+		if hand_length > 2:
 			self.post_voluntary_hit()
-		if num_hits > 1:
-			self.hit(num_hits-1)
+		if hand_length == 1:
+			self.hit()
 
 
 	def new_hand(self, hard=False):

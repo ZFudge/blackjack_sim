@@ -29,7 +29,7 @@ class Blackjack():
 	def initial_deal(self):
 		self.dealer.hit()
 		for player in self.players:
-			player.hit(num_hits=2)
+			player.hit()
 
 
 	def log_hands(self):
@@ -44,7 +44,7 @@ class Blackjack():
 		if (not self.all_players_bust() and not self.all_players_surrender()) or self.valid_splits_present():
 			self.dealer.move()
 		else:
-			self.dealer.discard()
+			self.dealer.reveal_card()
 
 
 	def non_bankrupt_players(self):
