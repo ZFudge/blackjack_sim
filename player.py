@@ -154,21 +154,24 @@ class Dealer(Person):
 			self.compare_to_dealer(player)
 			if player.split_results:
 				for result in player.split_results:
-					player.revisit_split(result)
-					self.compare_to_dealer(player)
+					if result['busts'] is False:
+						player.revisit_split(result)
+						self.compare_to_dealer(player)
 
 
-	def compare_to_dealer(self, person):
-		player_bust = person.check_if_busted()
-		if not player_bust:
-			if self.busts or person.max_score > self.max_score:
-				person.win()
-			elif person.max_score == self.max_score:
-				person.draw()
+	def compare_to_dealer(self, player):
+		if not player.busts:
+			player_bust = player.check_if_busted()
+		if not player.busts:
+			if self.busts or player.max_score > self.max_score:
+				player.win()
+			elif player.max_score == self.max_score:
+				player.draw()
 			else:
-				person.lose()
+				player.lose()
 		else:
-			person.lose()
+			pass
+			# player.lose()
 
 
 	def reveal_card(self):
@@ -178,10 +181,12 @@ class Dealer(Person):
 		self.evaluate(card)
 		self.log_hand()
 
+
 	def hand_formatted(self):
 		if len(self.hand) == 1:
 			return ', '.join(self.hand + ['*'])
 		return ', '.join(self.hand)
+
 
 	def new_hand(self, hard=False):
 		super().new_hand()
@@ -340,12 +345,12 @@ class Player(Person, Hi_Lo):
 	def split_record(self):
 		result =  {
 			'score': self.score,
-			# 'double': self.double,
+			'double': self.double,
 			'bet': self.bet,
 			'busts': self.busts
 		}
 		self.split_results.append(result)
-		print(f"Previous split score: {result['score']}, bet: {result['bet']}")
+		print(f" Recording split. (Score: {self.score_formatted()}, Bet: {self.bet}, Busts: {self.busts}, Double: {self.double})")
 
 
 	def log_hand(self):
@@ -368,8 +373,10 @@ class Player(Person, Hi_Lo):
 
 	def revisit_split(self, results):
 		self.score = results['score']
-		self.bet = results['bet']
 		self.busts = results['busts']
+		self.double = results['double']
+		self.bet = results['bet']
+		print(f' Revisiting split. (Score: {self.score_formatted()}, Bet: {self.bet}, Busts: {self.busts}, Double: {self.double}')
 
 
 	def no_splits(self):
@@ -459,7 +466,6 @@ class Player(Person, Hi_Lo):
 			self._surrendered = value
 		else:
 			raise ValueError(f'Surrender value must be a boolean. Received {type(value)}')
-
 
 	@property
 	def bet(self):
