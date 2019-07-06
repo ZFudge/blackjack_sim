@@ -1,13 +1,31 @@
 from player import Player, Dealer
-
 from inputs import ask_for_another_round
 
+from time import sleep
+
 class Blackjack():
-	def __init__(self, use_basic_strategy=False, stand_on_soft_17=True, num_players=1):
+	def __init__(
+			self,
+			use_basic_strategy=False,
+			stand_on_soft_17=True,
+			num_players=1,
+			can_double=True,
+			can_double_after_split=True,
+			can_surrender=True
+			):
 		self.dealer = Dealer(stand_on_soft_17=stand_on_soft_17)
 		self.players = []
 		for x in range(num_players):
-			self.players.append(Player(use_basic_strategy=use_basic_strategy, name=x+1))
+			self.players.append(
+				Player(
+					use_basic_strategy=use_basic_strategy,
+					name=x+1,
+					stand_on_soft_17=stand_on_soft_17,
+					can_double=True,
+					can_double_after_split=True,
+					can_surrender=True
+					)
+				)
 			if x == 0 and use_basic_strategy is False:
 				use_basic_strategy = True
 
@@ -27,8 +45,9 @@ class Blackjack():
 
 
 	def initial_deal(self):
-		self.dealer.hit()
+		dealer_upcard = self.dealer.hit()
 		for player in self.players:
+			player.dealer_upcard = dealer_upcard
 			player.hit()
 
 
@@ -100,8 +119,9 @@ class Blackjack():
 
 
 def main():
-	bkjk = Blackjack()
+	bkjk = Blackjack(use_basic_strategy=True)
 	while bkjk.game():
+		sleep(0.2)
 		continue
 
 if __name__ == '__main__':

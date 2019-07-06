@@ -88,7 +88,7 @@ class Person(Evaluate):
 		if type(value) is bool:
 			self._busts = value
 		else:
-			raise ValueError(f'Busts value must be boolean. Received {type(value)}')
+			raise ValueError(f'Busts value must be boolean. Received {type(value)}, {value}')
 
 	@property
 	def blackjack(self):
@@ -99,7 +99,7 @@ class Person(Evaluate):
 		if type(value) is bool:
 			self._blackjack = value
 		else:
-			raise ValueError(f'Blackjack value must be boolean. Received {type(value)}')
+			raise ValueError(f'Blackjack value must be boolean. Received {type(value)}, {value}')
 
 	@property
 	def max_score(self):
@@ -194,9 +194,10 @@ class Dealer(Person):
 
 
 	def hit(self):
-		super().hit()
+		card = super().hit()
 		if len(self.hand) == 1:
 			self.hidden_hit()
+		return card
 
 
 	def hidden_hit(self):
@@ -219,10 +220,23 @@ class Dealer(Person):
 
 
 
-class Player(Person, Hi_Lo):
-	def __init__(self, name, use_basic_strategy=False, bankroll=1000, bet_unit=5, bet_spread=12, **kwargs):
-		Person.__init__(self, **kwargs)
+class Player(Person, Hi_Lo, Basic_Strategy):
+	def __init__(
+			self,
+			name,
+			stand_on_soft_17,
+			can_double,
+			can_double_after_split,
+			can_surrender,
+			use_basic_strategy=False,
+			bankroll=1000,
+			bet_unit=5,
+			bet_spread=12,
+			**kwargs
+			):
+		Person.__init__(self)
 		Hi_Lo.__init__(self)
+		Basic_Strategy.__init__(self, stand_on_soft_17)
 		self._name = f'_{name}'
 		self._use_basic_strategy = use_basic_strategy
 		self._bankroll = Decimal(bankroll)
@@ -233,6 +247,10 @@ class Player(Person, Hi_Lo):
 		self._surrendered = False
 		self.split_hands = []
 		self.split_results = []
+		self._dealer_upcard = None
+		self._can_double = can_double
+		self._can_double_after_split = can_double_after_split
+		self._can_surrender = can_surrender
 
 
 	def make_a_bet(self):
@@ -256,7 +274,22 @@ class Player(Person, Hi_Lo):
 	def true_count_bet(self):
 		tc = self.true_count
 		if tc > 1:
-			self.bet = self.bet_unit * self.true_count
+			tc_bet = self.bet_unit * self.true_count
+			if self.bet_spread is not None:
+				if tc_bet > self.bet_spread:
+					if self.bet_spread > self.bankroll:
+						self.bet = self.bankroll
+					else:	
+						self.bet = self.bet_spread
+				else:
+					if tc_bet > self.bankroll:
+						self.bet = self.bankroll
+					else:
+						self.bet = tc_bet
+			elif tc_bet > self.bankroll:
+				self.bet = self.bankroll
+			else:
+				self.bet = tc_bet
 		else:
 			self.bet = self.bet_unit
 
@@ -269,7 +302,7 @@ class Player(Person, Hi_Lo):
 		blackjack = super().move()
 		if blackjack is False and self.double is False:
 			if self.use_basic_strategy:
-				self.basic_strategy_move()
+				move_choice = self.basic_strategy_move()
 			else:
 				move_choice = manual_move(self.available_moves())
 			self.evaluate_move(move_choice)
@@ -278,20 +311,51 @@ class Player(Person, Hi_Lo):
 
 
 	def basic_strategy_move(self):
-		pass
+		soft = self.all_lists([self.score])
+		dealer_upcard = self.dealer_upcard
+		if type(dealer_upcard) is list:
+			dealer_upcard = 11
+		move = None
+		if self.can_split():
+			if soft:
+				move = self.strategy_map['split']['A'][dealer_upcard - 2]
+			else:
+				move = self.strategy_map['split'][self.score / 2][dealer_upcard - 2]
+				if move == 'ns':
+					move = None
+		if move is None:
+			if soft:
+				move = self.strategy_map['soft'][self.max_score][dealer_upcard - 2] 
+			else:
+				move = self.strategy_map['hard'][self.score][dealer_upcard - 2]
+		print(f'Move: {move}')
+		return move
 
 
 	def evaluate_move(self, move_choice):
-		if move_choice in ['d', 'h', '']:
-			if move_choice == 'd':
-				self.double = True
-			self.hit()
-		elif move_choice == 's':
+		if move_choice == 's':
 			self.stand()
+		elif move_choice == 'h':
+			self.hit()
+		elif move_choice in ['ds', 'dh', 'd', 'h', '']:
+			if move_choice in ['ds', 'dh', 'd'] and self.can_double:
+				self.double = True
+			elif move_choice == 'ds':
+				self.stand()
+				return
+			self.hit()
 		elif move_choice == 'p':
 			self.split()
-		elif move_choice == 'r':
-			self.surrender()
+		elif move_choice == 'ph':
+			if self.can_double_after_split:
+				self.split()
+			else:
+				self.hit()
+		elif move_choice in ['r', 'rh']:
+			if self.can_surrender:
+				self.surrender()
+			else:
+				self.hit()
 
 
 	def hit(self):
@@ -312,6 +376,7 @@ class Player(Person, Hi_Lo):
 			self.surrendered = False
 		if hard:
 			self.split_results = []
+			self.dealer_upcard = None
 
 
 	def post_voluntary_hit(self):
@@ -339,7 +404,7 @@ class Player(Person, Hi_Lo):
 
 
 	def can_split(self):
-		return self.hand[0][0] == self.hand[1][0]
+		return len(self.hand) == 2 and self.hand[0][0] == self.hand[1][0]
 
 
 	def split_record(self):
@@ -404,7 +469,7 @@ class Player(Person, Hi_Lo):
 
 	def end_round(self, result, difference=0):
 		self.bankroll_increment = difference
-		difference = f"{'-' if difference < 0 else '+'}${abs(difference)}"
+		difference = f"{'-' if difference < 0 else '+'}${abs(difference)}{' ~ D' if self.double else ''}"
 		print(f'  {self.name} {result}! {difference}')
 		self.log_bankroll()
 
@@ -421,8 +486,9 @@ class Player(Person, Hi_Lo):
 		surrender = 'su[r]render'
 
 		if len(self.hand) == 2:
-			moves.append(surrender)
-			if self.can_double():
+			if self.can_surrender:
+				moves.append(surrender)
+			if self.can_double:
 				moves.append(double)
 			if self.can_split():
 				moves.append(split)
@@ -431,10 +497,30 @@ class Player(Person, Hi_Lo):
 			'long': ', '.join(moves)
 		}
 
-
+	@property
 	def can_double(self):
-		return self.bet * 2 <= self.bankroll
+		return self._can_double and self.bet * 2 <= self.bankroll
 
+	@property
+	def can_double_after_split(self):
+		return self._can_double_after_split
+
+	@property
+	def can_surrender(self):
+		return self._can_surrender and len(self.hand) == 2
+
+	@property
+	def dealer_upcard(self):
+		return self._dealer_upcard
+
+	@dealer_upcard.setter
+	def dealer_upcard(self, value):
+		if value is None:
+			self._dealer_upcard = None
+		elif type(value) in [str, list] and len(value) == 2:
+			self._dealer_upcard = self.get_value(value[0])
+		else:
+			raise ValueError(f'Dealer upcard value must be string, two characters/items in length. Received {type(value)}, {value}')
 
 	@property
 	def name(self):
@@ -454,7 +540,7 @@ class Player(Person, Hi_Lo):
 			else:
 				self.bet /= 2
 		else:
-			raise ValueError(f'Double value must be a boolean. Received {type(value)}')
+			raise ValueError(f'Double value must be a boolean. Received {type(value)}, {value}')
 
 	@property
 	def surrendered(self):
@@ -465,7 +551,7 @@ class Player(Person, Hi_Lo):
 		if type(value) is bool:
 			self._surrendered = value
 		else:
-			raise ValueError(f'Surrender value must be a boolean. Received {type(value)}')
+			raise ValueError(f'Surrender value must be a boolean. Received {type(value)}, {value}')
 
 	@property
 	def bet(self):
@@ -476,7 +562,7 @@ class Player(Person, Hi_Lo):
 		if type(value) in [int, float, Decimal]:
 			self._bet = Decimal(value)
 		else:
-			raise ValueError(f'Bet value must be int, float, or Decimal. Received {type(value)}')
+			raise ValueError(f'Bet value must be int, float, or Decimal. Received {type(value)}, {value}')
 
 	@property
 	def use_basic_strategy(self):
@@ -491,7 +577,7 @@ class Player(Person, Hi_Lo):
 		if type(value) is Decimal:
 			self._bankroll += value
 		else:
-			raise ValueError(f'Bankroll increment value must be Decimal. Received {type(value)}')
+			raise ValueError(f'Bankroll increment value must be Decimal. Received {type(value)}, {value}')
 
 	@property
 	def bet_unit(self):
@@ -502,7 +588,7 @@ class Player(Person, Hi_Lo):
 		if isinstance(value, int):
 			self._bet_unit = value
 		else:
-			raise ValueError(f'Betting unit value must be int. Received {type(value)}')
+			raise ValueError(f'Betting unit value must be int. Received {type(value)}, {value}')
 
 	@property
 	def bet_spread(self):
@@ -513,7 +599,7 @@ class Player(Person, Hi_Lo):
 		if isinstance(value, int):
 			self._bet_spread = value
 		else:
-			raise ValueError(f'Bet spread value must be int. Received {type(value)}')
+			raise ValueError(f'Bet spread value must be int. Received {type(value)}, {value}')
 
 
 def main():
