@@ -29,6 +29,7 @@ class Blackjack():
 			self.players.append(
 				Player(
 					use_basic_strategy=use_basic_strategy,
+					bankroll=bankroll,
 					name=x+1,
 					stand_on_soft_17=stand_on_soft_17,
 					can_double=True,
@@ -38,17 +39,6 @@ class Blackjack():
 				)
 			if x == 0 and use_basic_strategy is False:
 				use_basic_strategy = True
-
-
-	def game(self):
-		if self.non_bankrupt_players():
-			self.bets()
-			self.initial_deal()
-			self.log_hands()
-			self.make_moves()
-			self.dealer.compare_players(self.get_no_bust_unsurrendered_players())
-			self.update_axes()
-			return self.next_round_check()
 
 
 	def bets(self):
@@ -143,42 +133,71 @@ class Blackjack():
 			player.update_y_axis()
 
 
-def main():
+	def game(self):
+		if self.non_bankrupt_players():
+			self.bets()
+			self.initial_deal()
+			self.log_hands()
+			self.make_moves()
+			self.dealer.compare_players(self.get_no_bust_unsurrendered_players())
+			self.next_round_check()
+		self.update_axes()
+
+
+def main(num_players, bankroll, bet_unit, bet_spread, use_basic_strategy):
 	bkjk = Blackjack(
-		bankroll=1000,
-		bet_unit=10,
-		bet_spread=20,
-		use_basic_strategy=True,
-		num_players=6
+		bankroll=bankroll,
+		bet_unit=bet_unit,
+		bet_spread=bet_spread,
+		use_basic_strategy=use_basic_strategy,
+		num_players=num_players
 		)
 
-	# plot.style.use()
+	plot.style.use('fast')
 	x_axis = []
 	x = count()
+	x_axis.append(next(x))
+	bkjk.average()
 
 	def cont():
 		while len(bkjk.non_bankrupt_players()) > 0:
 			yield True
 
+	def progress_rounds():
+		for y in range(5):
+			x_axis.append(next(x))
+			bkjk.game()
+			bkjk.average()
+
 	def animation(n):
-		x_axis.append(next(x))
 		plot.cla()
+
+		progress_rounds()
+
 		for player in bkjk.players:
+			print(f'	plotting {player.name} - x:{len(x_axis)}, y:{len(player.y_axis)}')
 			plot.plot(x_axis, player.y_axis, label=player.name)
-		bkjk.average()
-		plot.plot(x_axis, bkjk.y_axis_average, linestyle='--', label='Player Average')
+		print(f'	plotting average - x:{len(x_axis)}, y:{len(bkjk.y_axis_average)}')
+		plot.plot(x_axis, bkjk.y_axis_average, linestyle='--', label='Average')
 
 		plot.xlabel('Hands')
 		plot.ylabel('Bankroll - USD')
-		plot.title('Blackjack Simulation')
+		plot.title(f'Blackjack Simulation - {num_players} {"Players" if num_players > 1 else "Player"}')
 		plot.legend(loc='upper left')
 		plot.grid(True)
 		plot.tight_layout()
-		bkjk.game()
 
-	animate = FuncAnimation(plot.gcf(), animation, frames=cont, interval=212, repeat=False)
+
+	animate = FuncAnimation(plot.gcf(), animation, frames=cont, interval=120, repeat=False)
 	plot.show()
 
 
 if __name__ == '__main__':
-	main()
+	main(
+		bankroll=1000,
+		bet_unit=50,
+		bet_spread=30,
+		use_basic_strategy=True,
+		num_players=6
+		)
+
