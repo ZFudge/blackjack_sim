@@ -33,7 +33,7 @@ class Person(Evaluate):
 		card = self.shoe.draw()
 		self.hand.append(card)
 		if len(self.hand) > 2:
-			print(f'{self.name} hits. ', end='')
+			print(f'{self.name} hits.')
 		self.evaluate(card)
 		return card
 
@@ -247,6 +247,7 @@ class Player(Person, Hi_Lo, Basic_Strategy):
 		self._surrendered = False
 		self.split_hands = []
 		self.split_results = []
+		self.y_axis = [bankroll]
 		self._dealer_upcard = None
 		self._can_double = can_double
 		self._can_double_after_split = can_double_after_split
@@ -254,6 +255,7 @@ class Player(Person, Hi_Lo, Basic_Strategy):
 
 
 	def make_a_bet(self):
+		self.check_true_count()
 		self.log_bankroll()
 		if self.use_basic_strategy:
 			self.true_count_bet()
@@ -262,9 +264,13 @@ class Player(Person, Hi_Lo, Basic_Strategy):
 				self.manual_bet()
 		print(f'{self.name} bets: ${self.bet}')
 
+	def check_true_count(self):
+		if self.shoe.full(self.count):
+			self.reset_count()
+
 
 	def log_bankroll(self):
-		print(f'Bankroll: ${self.bankroll}')
+		print(f'{self.name} bankroll: ${self.bankroll}')
 
 
 	def bet_beneath_threshold(self):
@@ -453,6 +459,8 @@ class Player(Person, Hi_Lo, Basic_Strategy):
 		valids = [ x['busts'] is False for x in self.split_results]
 		return any(valids)
 
+	def update_y_axis(self):
+		self.y_axis.append(round(self.bankroll))
 
 	def win(self):
 		self.end_round(result='wins', difference=self.bet)
@@ -496,6 +504,10 @@ class Player(Person, Hi_Lo, Basic_Strategy):
 			'short': [move[move.index('[')+1][0:] for move in moves],
 			'long': ', '.join(moves)
 		}
+
+	@property
+	def bankrupt(self):
+		return self.bankroll < 1
 
 	@property
 	def can_double(self):
