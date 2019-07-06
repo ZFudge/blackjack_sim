@@ -10,6 +10,7 @@ class Shoe():
 		self._number_of_decks = number_of_decks
 		self._penetration_percentage = penetration_percentage
 		self.new_shoe()
+		self._full_shoe = self.number_of_cards
 
 
 	def draw(self):
@@ -18,6 +19,8 @@ class Shoe():
 			self.new_shoe()
 		return card
 
+	def full(self, count):
+		return self.number_of_cards == self.full_shoe or self.full_shoe - self.number_of_cards < abs(count)
 
 	def new_shoe(self):
 		shuffled_decks = Shoe.shuffle(Shoe.single_deck * self.number_of_decks)
@@ -37,6 +40,13 @@ class Shoe():
 	def number_of_decks(self, value):
 		self._number_of_decks = value
 
+	@property
+	def number_of_cards(self):
+		return len(self.shoe)
+
+	@property
+	def full_shoe(self):
+		return self._full_shoe
 
 	@property
 	def penetration_percentage(self):

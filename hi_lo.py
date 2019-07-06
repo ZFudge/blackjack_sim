@@ -1,5 +1,6 @@
 from cards import card_values
 
+
 class Hi_Lo():
 	card_values = card_values
 
@@ -25,9 +26,12 @@ class Hi_Lo():
 	@true_count.setter
 	def true_count(self, deck_count):
 		if deck_count > 0:
-			self._true_count = self._count / deck_count
+			self._true_count = round(self._count / deck_count)
 		else:
 			self._true_count = self._count
+
+	def reset_count(self):
+		self._count = 0
 
 def main():
 	pass
