@@ -19,23 +19,25 @@ class Blackjack():
 			number_of_decks,
 			use_basic_strategy,
 			stand_on_soft_17=True,
-			num_players=1,
 			can_double=True,
 			can_double_after_split=True,
-			can_surrender=True
+			can_surrender=True,
+			num_players=1
 			):
 		self.players = []
 		self.y_axis_average = []
 		for x in range(num_players):
 			self.players.append(
 				Player(
-					use_basic_strategy=use_basic_strategy,
 					bankroll=bankroll,
-					name=x+1,
+					bet_unit=bet_unit,
+					bet_spread=bet_spread,
+					use_basic_strategy=use_basic_strategy,
 					stand_on_soft_17=stand_on_soft_17,
 					can_double=True,
 					can_double_after_split=True,
-					can_surrender=True
+					can_surrender=True,
+					name=x+1
 					)
 				)
 			if x == 0 and use_basic_strategy is False:
@@ -154,7 +156,6 @@ class Blackjack():
 
 
 def main(
-	num_players,
 	bankroll,
 	bet_unit,
 	bet_spread,
@@ -165,6 +166,7 @@ def main(
 	can_double,
 	can_double_after_split,
 	can_surrender,
+	num_players,
 	game_interval,
 	speed_ms
 	):
@@ -179,11 +181,19 @@ def main(
 		)
 
 	plot.style.use('fast')
+
+	# fig1, ax1 = plot.subplots(1,1)
+	# fig2, ax2 = plot.subplots()
+
+	fig, (ax1, ax2) = plot.subplots(1, 2, figsize=(15, 7))
+	# fig.
+
+	plyr = bkjk.players[0]
 	x_axis = []
 	x = count()
 	x_axis.append(next(x))
 	bkjk.average()
-
+	colors = ['#0077dd', '#dd0022']
 	def cont():
 		while len(bkjk.non_bankrupt_players()) > 0:
 			yield True
@@ -194,32 +204,51 @@ def main(
 			bkjk.game()
 			bkjk.average()
 
-	def animation(n):
-		plot.cla()
+	def animation1(n):
+		ax1.cla()
 
 		progress_rounds()
 
 		for player in bkjk.players:
 			print(f'	plotting {player.name} - x:{len(x_axis)}, y:{len(player.y_axis)}')
-			plot.plot(x_axis, player.y_axis, label=player.name)
-		print(f'	plotting average - x:{len(x_axis)}, y:{len(bkjk.y_axis_average)}', end='')
-		plot.plot(x_axis, bkjk.y_axis_average, linestyle='--', label='Average')
+			ax1.plot(x_axis, player.y_axis, label=player.name)
 
-		plot.xlabel('Hands')
-		plot.ylabel('Bankroll - USD')
-		plot.title(f'Blackjack Simulation - p:{penetration_percentage}%, #d:{number_of_decks}, u: ${bet_unit}, ibr:${bankroll}, sp:{bet_spread}')
-		plot.legend(loc='upper left')
-		plot.grid(True)
+		print(f'	plotting average - x:{len(x_axis)}, y:{len(bkjk.y_axis_average)}', end='')
+		ax1.plot(x_axis, bkjk.y_axis_average, linestyle='--', label='Average')
+		ax1.legend(loc='upper left')
+		ax1.set_xlabel('Hands')
+		ax1.set_ylabel('Bankroll - USD')
+		ax1.set_title(f'Blackjack Simulation - p:{penetration_percentage}%, #d:{number_of_decks}, ibr:${bankroll}, u: ${bet_unit}, sp:{bet_spread}')
+		ax1.grid(True)
 		plot.tight_layout()
 
 
-	animate = FuncAnimation(plot.gcf(), animation, frames=cont, interval=speed_ms, repeat=False)
+	def animation2(m):
+		ax2.cla()
+		print(f'	plotting pie - {len(x_axis) * len(bkjk.non_bankrupt_players()) - bkjk.players[0].wins}, {bkjk.players[0].wins}', end='')
+		labels = ['Wins', 'Losses']
+		ax2.pie(
+			[ plyr.wins, plyr.losses ],
+			labels=labels,
+			autopct='%1.1f%%',
+			# shadow=True,
+			startangle=90,
+			wedgeprops={"edgecolor":"k"},
+			colors=colors
+			)
+
+		plot.tight_layout()
+
+	# animate = FuncAnimation(plot.gcf(), animation, frames=cont, interval=speed_ms, repeat=False)
+
+	animate1 = FuncAnimation(plot.gcf(), animation1, frames=cont, interval=speed_ms, repeat=False)
+	animate2 = FuncAnimation(plot.gcf(), animation2, frames=cont, interval=speed_ms, repeat=False)
+
 	plot.show()
 
 
 if __name__ == '__main__':
 	main(
-		num_players=6,
 		bankroll=10000,
 		bet_unit=150,
 		bet_spread=30,
@@ -230,7 +259,8 @@ if __name__ == '__main__':
 		can_double=True,
 		can_double_after_split=True,
 		can_surrender=True,
-		game_interval=10,
-		speed_ms=100
+		num_players=6,
+		game_interval=15,
+		speed_ms=200
 		)
 

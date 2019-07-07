@@ -4,7 +4,6 @@ from hi_lo import Hi_Lo
 from shoe import Shoe
 
 from inputs import check_same_bet, input_bet, manual_move
-# from cards import card_count_values
 
 from decimal import Decimal
 
@@ -228,6 +227,9 @@ class Dealer(Person):
 
 
 class Player(Person, Basic_Strategy):
+	wins = 0
+	losses = 0
+
 	def __init__(
 			self,
 			name,
@@ -463,10 +465,13 @@ class Player(Person, Basic_Strategy):
 		self.y_axis.append(round(self.bankroll))
 
 	def win(self):
+		Player.wins += 1
+		print(self.wins)
 		self.end_round(result='wins', difference=self.bet)
 
 
 	def lose(self):
+		Player.losses += 1
 		self.end_round(result='loses', difference=-self.bet)
 
 
