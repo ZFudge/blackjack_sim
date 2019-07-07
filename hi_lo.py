@@ -1,37 +1,33 @@
-from cards import card_values
+from cards import card_count_values
 
 
 class Hi_Lo():
-	card_values = card_values
+	count = 0
+	true_count = 0
 
-	def __init__(self):
-		self._count = 0
-		self._true_count = 0
-
-	@property
-	def count(self):
-		return self._count
-
-	@count.setter
-	def count(self, card_shoesize):
+	@classmethod
+	def count_card(cls, card_shoesize):
 		card, shoesize = card_shoesize
 		card = card[0]
-		self._count += card_values[card]
-		self.true_count = shoesize
+		print(f'count: {cls.count}, true_count: {cls.true_count}, value:{card_count_values[card]}', end='')
+		cls.count += card_count_values[card]
+		cls.set_true_count(shoesize)
+		print(f'    card: {card}, shoesize: {shoesize}, count: {cls.count}, true_count: {cls.true_count}')#, end='')
 
-	@property
-	def true_count(self):
-		return self._true_count
 
-	@true_count.setter
-	def true_count(self, deck_count):
-		if deck_count > 0:
-			self._true_count = round(self._count / deck_count)
+	@classmethod
+	def set_true_count(cls, deckcount):
+		if deckcount > 1:
+			cls.true_count = round(cls.count / deckcount)
 		else:
-			self._true_count = self._count
+			cls.true_count = cls.count
 
-	def reset_count(self):
-		self._count = 0
+
+	@classmethod
+	def reset_count(cls):
+		cls.count = 0
+		cls.true_count = 0
+
 
 def main():
 	pass
