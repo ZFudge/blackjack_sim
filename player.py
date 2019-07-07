@@ -4,13 +4,16 @@ from hi_lo import Hi_Lo
 from shoe import Shoe
 
 from inputs import check_same_bet, input_bet, manual_move
+# from cards import card_count_values
 
 from decimal import Decimal
 
-shoe = Shoe()
+hl = Hi_Lo()
+shoe = Shoe(hl)
 
 class Person(Evaluate):
 	def __init__(self):
+		self.hl = hl
 		self.shoe = shoe
 		self.hand = []
 		self.score = 0
@@ -31,6 +34,7 @@ class Person(Evaluate):
 
 	def hit(self):
 		card = self.shoe.draw()
+		self.hl.count_card([card, self.shoe.size])
 		self.hand.append(card)
 		if len(self.hand) > 2:
 			print(f'{self.name} hits.')
@@ -114,10 +118,12 @@ class Person(Evaluate):
 
 
 class Dealer(Person):
-	def __init__(self, stand_on_soft_17=True, **kwargs):
-		Person.__init__(self, **kwargs)
+	def __init__(self, stand_on_soft_17=True, penetration_percentage=65, number_of_decks=8):
+		Person.__init__(self)
 		self._stand_on_soft_17 = stand_on_soft_17
 		self._hidden_card = None
+		self.shoe.penetration_percentage=penetration_percentage
+		self.shoe.number_of_decks=number_of_decks
 
 
 	def move(self):
@@ -176,6 +182,7 @@ class Dealer(Person):
 
 	def reveal_card(self):
 		card = self.hidden_card
+		self.hl.count_card((card, self.shoe.size))
 		self.hidden_card = None
 		self.hand.append(card)
 		self.evaluate(card)
@@ -220,7 +227,7 @@ class Dealer(Person):
 
 
 
-class Player(Person, Hi_Lo, Basic_Strategy):
+class Player(Person, Basic_Strategy):
 	def __init__(
 			self,
 			name,
@@ -235,7 +242,6 @@ class Player(Person, Hi_Lo, Basic_Strategy):
 			**kwargs
 			):
 		Person.__init__(self)
-		Hi_Lo.__init__(self)
 		Basic_Strategy.__init__(self, stand_on_soft_17)
 		self._name = f'_{name}'
 		self._use_basic_strategy = use_basic_strategy
@@ -255,7 +261,6 @@ class Player(Person, Hi_Lo, Basic_Strategy):
 
 
 	def make_a_bet(self):
-		self.check_true_count()
 		self.log_bankroll()
 		if self.use_basic_strategy:
 			self.true_count_bet()
@@ -263,10 +268,6 @@ class Player(Person, Hi_Lo, Basic_Strategy):
 			if self.bet == 0 or self.bet_beneath_threshold() or not check_same_bet():
 				self.manual_bet()
 		print(f'{self.name} bets: ${self.bet}')
-
-	def check_true_count(self):
-		if self.shoe.full(self.count):
-			self.reset_count()
 
 
 	def log_bankroll(self):
@@ -278,14 +279,14 @@ class Player(Person, Hi_Lo, Basic_Strategy):
 
 
 	def true_count_bet(self):
-		tc = self.true_count
-		if tc > 1:
-			tc_bet = self.bet_unit * self.true_count
+		tc_vetti = self.hl.true_count - 1
+		if tc_vetti > 1:
+			tc_bet = self.bet_unit * tc_vetti
 			if self.bet_spread is not None:
 				if tc_bet > self.bet_spread:
 					if self.bet_spread > self.bankroll:
 						self.bet = self.bankroll
-					else:	
+					else:
 						self.bet = self.bet_spread
 				else:
 					if tc_bet > self.bankroll:
@@ -366,7 +367,6 @@ class Player(Person, Hi_Lo, Basic_Strategy):
 
 	def hit(self):
 		card = super().hit()
-		self.count = [card, self.shoe.size]
 		hand_length = len(self.hand)
 		if hand_length > 2:
 			self.post_voluntary_hit()
