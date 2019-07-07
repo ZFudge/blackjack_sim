@@ -1,11 +1,12 @@
 from cards import single_deck as single_deck_list
-import random
 
+import random
 
 class Shoe():
 	single_deck = single_deck_list
 
-	def __init__(self, number_of_decks=8, penetration_percentage=65):
+	def __init__(self, hl=None, number_of_decks=8, penetration_percentage=65):
+		self.hl = hl
 		self.shoe = []
 		self._number_of_decks = number_of_decks
 		self._penetration_percentage = penetration_percentage
@@ -25,12 +26,13 @@ class Shoe():
 	def new_shoe(self):
 		shuffled_decks = Shoe.shuffle(Shoe.single_deck * self.number_of_decks)
 		penetrated_decks = Shoe.penetrate(shuffled_decks, self.penetration_percentage)
-		self.shoe += penetrated_decks
-
+		self.shoe = penetrated_decks
+		if self.hl is not None:
+			self.hl.reset_count()
 
 	@property
 	def size(self):
-		return round(len(self.shoe) / (self.penetration_percentage / 100 * 52))
+		return round(2 * (len(self.shoe) / (self.penetration_percentage / 100 * 52))) / 2
 
 	@property
 	def number_of_decks(self):
@@ -38,7 +40,14 @@ class Shoe():
 
 	@number_of_decks.setter
 	def number_of_decks(self, value):
-		self._number_of_decks = value
+		if type(value) is int:
+			if value >= 1 and value <= 8:
+				self._number_of_decks = value
+				self.new_shoe()
+			else:
+				raise ValueError(f'Deck number must be between 1 and 8. Received {value}')
+		else:
+			raise ValueError(f'Deck number type must be int. Received {type(value)}')
 
 	@property
 	def number_of_cards(self):
@@ -54,7 +63,14 @@ class Shoe():
 
 	@penetration_percentage.setter
 	def penetration_percentage(self, value):
-		self._penetration_percentage = value
+		if type(value) is int:
+			if value >= 60 and value <= 100:
+				self._penetration_percentage = value
+				self.new_shoe()
+			else:
+				raise ValueError(f'Penetration percentage must be between 60 and 100. Received {value}')
+		else:
+			raise ValueError(f'Penetration percentage type must be int. Received {type(value)}')
 
 	@staticmethod
 	def shuffle(deck):
