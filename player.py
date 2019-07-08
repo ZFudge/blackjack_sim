@@ -55,7 +55,7 @@ class Person(Evaluate):
 
 
 	def check_for_blackjack(self):
-		if self.max_score == 21:
+		if self.max_score == 21 and len(self.hand) == 2:
 			self.blackjack = True
 			print(f'{self.name} blackjack!')
 
@@ -264,6 +264,7 @@ class Player(Person, Basic_Strategy):
 
 	def make_a_bet(self):
 		self.log_bankroll()
+		self.check_bet_adjustment()
 		if self.use_basic_strategy:
 			self.true_count_bet()
 		else:
@@ -466,8 +467,10 @@ class Player(Person, Basic_Strategy):
 
 	def win(self):
 		Player.wins += 1
-		print(self.wins)
-		self.end_round(result='wins', difference=self.bet)
+		if self.blackjack:
+			self.end_round(result='wins', difference=self.bet * 15/10)
+		else:
+			self.end_round(result='wins', difference=self.bet)
 
 
 	def lose(self):
@@ -618,6 +621,7 @@ class Player(Person, Basic_Strategy):
 		else:
 			raise ValueError(f'Bet spread value must be int. Received {type(value)}, {value}')
 
+	
 
 def main():
 	pass
