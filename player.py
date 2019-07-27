@@ -6,6 +6,7 @@ from shoe import Shoe
 from inputs import check_same_bet, input_bet, manual_move
 
 from decimal import Decimal
+from math import ceil
 
 hl = Hi_Lo()
 shoe = Shoe(hl)
@@ -35,14 +36,15 @@ class Person(Evaluate):
 		card = self.shoe.draw()
 		self.hl.count_card([card, self.shoe.size])
 		self.hand.append(card)
-		if len(self.hand) > 2:
-			print(f'{self.name} hits.')
+		# if len(self.hand) > 2:
+		# 	print(f'{self.name} hits.')
 		self.evaluate(card)
 		return card
 
 
 	def stand(self):
-		print(f'{self.name} stands.')
+		# print(f'{self.name} stands.')
+		pass
 
 
 	def evaluate(self, card):
@@ -241,6 +243,7 @@ class Player(Person, Basic_Strategy):
 			bankroll=1000,
 			bet_unit=5,
 			bet_spread=12,
+			bank_adjustment_resolution=5,
 			**kwargs
 			):
 		Person.__init__(self)
@@ -260,7 +263,20 @@ class Player(Person, Basic_Strategy):
 		self._can_double = can_double
 		self._can_double_after_split = can_double_after_split
 		self._can_surrender = can_surrender
+		self._bank_adjustment_resolution = bank_adjustment_resolution
+		self._bet_ratio = bankroll / bet_unit
 
+
+	def check_bet_adjustment(self):
+		diff = ceil(int(self.bankroll) / self.bet_ratio) - self.bet_unit
+		bar = self.bank_adjustment_resolution
+		if abs(diff) >= bar:
+			increment = diff // bar * bar
+			if increment > 0 or (increment < 0 and self.bankroll > abs(increment)): #self.bet_unit > bar
+				print(f'adjustment bet_unit:{self.bet_unit}, increment:{increment}')
+				self.bet_unit += int(increment)
+				print(f'bankroll:{self.bankroll}, bet_ratio:{self.bet_ratio}, bet_unit:{self.bet_unit}, diff:{diff}, bank_adjustment_resolution:{bar}, increment:{increment}, ')
+ 
 
 	def make_a_bet(self):
 		self.log_bankroll()
@@ -270,7 +286,7 @@ class Player(Person, Basic_Strategy):
 		else:
 			if self.bet == 0 or self.bet_beneath_threshold() or not check_same_bet():
 				self.manual_bet()
-		print(f'{self.name} bets: ${self.bet}')
+		print(f'{self.name} bets: ${self.bet}\ttc: {self.hl.true_count}\t', end='')
 
 
 	def log_bankroll(self):
@@ -285,12 +301,14 @@ class Player(Person, Basic_Strategy):
 		tc_vetti = self.hl.true_count - 1
 		if tc_vetti > 1:
 			tc_bet = self.bet_unit * tc_vetti
+			print(f'tc_vetti: {tc_vetti} * bet_unit: {self.bet_unit} = {tc_bet}')
 			if self.bet_spread is not None:
-				if tc_bet > self.bet_spread:
-					if self.bet_spread > self.bankroll:
+				upper_bet_limit = self.bet_spread * self.bet_unit
+				if tc_bet > upper_bet_limit:
+					if upper_bet_limit > self.bankroll:
 						self.bet = self.bankroll
 					else:
-						self.bet = self.bet_spread
+						self.bet = upper_bet_limit
 				else:
 					if tc_bet > self.bankroll:
 						self.bet = self.bankroll
@@ -450,7 +468,7 @@ class Player(Person, Basic_Strategy):
 		self.busts = results['busts']
 		self.double = results['double']
 		self.bet = results['bet']
-		print(f' Revisiting split. (Score: {self.score_formatted()}, Bet: {self.bet}, Busts: {self.busts}, Double: {self.double}')
+		# print(f' Revisiting split. (Score: {self.score_formatted()}, Bet: {self.bet}, Busts: {self.busts}, Double: {self.double}')
 
 
 	def no_splits(self):
@@ -595,7 +613,10 @@ class Player(Person, Basic_Strategy):
 	@bankroll.setter
 	def bankroll_increment(self, value):
 		if type(value) is Decimal:
-			self._bankroll += value
+			if value % Decimal(self.bank_adjustment_resolution / 2) == 0:
+				self._bankroll += value
+			else:
+				raise ValueError(f'adjustment is wrong {type(value)}, value: {value}, bar/2: {Decimal(self.bank_adjustment_resolution / 2)}, %{value%self.bank_adjustment_resolution}, {self.name}')
 		else:
 			raise ValueError(f'Bankroll increment value must be Decimal. Received {type(value)}, {value}')
 
@@ -607,6 +628,8 @@ class Player(Person, Basic_Strategy):
 	def bet_unit(self, value):
 		if isinstance(value, int):
 			self._bet_unit = value
+			if self._bet_unit == 0:
+				raise ValueError(f'unit is wrong {self.name}, {self._bet_unit}')
 		else:
 			raise ValueError(f'Betting unit value must be int. Received {type(value)}, {value}')
 
@@ -621,6 +644,13 @@ class Player(Person, Basic_Strategy):
 		else:
 			raise ValueError(f'Bet spread value must be int. Received {type(value)}, {value}')
 
+	@property
+	def bet_ratio(self):
+		return self._bet_ratio
+
+	@property
+	def bank_adjustment_resolution(self):
+		return self._bank_adjustment_resolution
 	
 
 def main():

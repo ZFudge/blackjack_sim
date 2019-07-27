@@ -24,6 +24,7 @@ class Shoe():
 		return self.number_of_cards == self.full_shoe or self.full_shoe - self.number_of_cards < abs(count)
 
 	def new_shoe(self):
+		print('\t\t\tnew shoe')
 		shuffled_decks = Shoe.shuffle(Shoe.single_deck * self.number_of_decks)
 		penetrated_decks = Shoe.penetrate(shuffled_decks, self.penetration_percentage)
 		self.shoe = penetrated_decks

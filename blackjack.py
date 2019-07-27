@@ -15,6 +15,7 @@ class Blackjack():
 			bankroll,
 			bet_unit,
 			bet_spread,
+			bank_adjustment_resolution,
 			penetration_percentage,
 			number_of_decks,
 			use_basic_strategy,
@@ -32,6 +33,7 @@ class Blackjack():
 					bankroll=bankroll,
 					bet_unit=bet_unit,
 					bet_spread=bet_spread,
+					bank_adjustment_resolution=bank_adjustment_resolution,
 					use_basic_strategy=use_basic_strategy,
 					stand_on_soft_17=stand_on_soft_17,
 					can_double=True,
@@ -151,7 +153,7 @@ class Blackjack():
 			self.make_moves()
 			self.dealer.compare_players(self.get_no_bust_unsurrendered_players())
 			self.next_round_check()
-			print(self.dealer.shoe.shoe)
+			# print(self.dealer.shoe.shoe)
 		self.update_axes()
 
 
@@ -159,6 +161,7 @@ def main(
 	bankroll,
 	bet_unit,
 	bet_spread,
+	bank_adjustment_resolution,
 	use_basic_strategy,
 	penetration_percentage,
 	number_of_decks,
@@ -177,6 +180,7 @@ def main(
 		bankroll=bankroll,
 		bet_unit=bet_unit,
 		bet_spread=bet_spread,
+		bank_adjustment_resolution=bank_adjustment_resolution,
 		use_basic_strategy=use_basic_strategy,
 		num_players=num_players,
 		penetration_percentage=penetration_percentage,
@@ -206,7 +210,7 @@ def main(
 		ax1.legend(loc='upper left')
 		ax1.set_xlabel('Hands')
 		ax1.set_ylabel('Bankroll - USD')
-		ax1.set_title(f'Blackjack Simulation - p:{penetration_percentage}%, #d:{number_of_decks}, ibr:${bankroll}, u: ${bet_unit}, sp:{bet_spread}')
+		ax1.set_title(f'Blackjack Simulation\np:{penetration_percentage}%, #d:{number_of_decks}, ibr:${bankroll}, u: ${bet_unit}, sp:{bet_spread}, bar:{bank_adjustment_resolution}')
 		ax1.grid(True)
 
 	def plot_pie():
@@ -231,22 +235,24 @@ def main(
 		def cont():
 			while len(bkjk.non_bankrupt_players()) > 0:
 				yield True
+			else:
+				print('bankrupt')
 
-		def animation1(n):
+		def animation_plot(n):
 			ax1.cla()
 			progress_rounds()
 			plot_players()
 			plot.tight_layout()
 
-		def animation2(m):
+		def animation_pie(m):
 			ax2.cla()
 			plot_pie()
 			plot.tight_layout()
 
-		animate1 = FuncAnimation(plot.gcf(), animation1, frames=cont, interval=speed_ms, repeat=False)
-		animate2 = FuncAnimation(plot.gcf(), animation2, frames=cont, interval=speed_ms, repeat=False)
+		animate1 = FuncAnimation(plot.gcf(), animation_plot, frames=cont, interval=speed_ms, repeat=False)
+		animate2 = FuncAnimation(plot.gcf(), animation_pie, frames=cont, interval=speed_ms, repeat=False)
 	else:
-		while len(x_axis) < 1000:
+		while len(x_axis) < 10000:
 			progress_rounds()
 		plot_players()
 		plot_pie()
@@ -261,8 +267,9 @@ def blockPrint():
 
 if __name__ == '__main__':
 	main(
-		bankroll=300,
-		bet_unit=5,
+		bankroll=1000,
+		bet_unit=20,
+		bank_adjustment_resolution=20,
 		bet_spread=12,
 		use_basic_strategy=True,
 		penetration_percentage=70,
@@ -272,9 +279,9 @@ if __name__ == '__main__':
 		can_double_after_split=True,
 		can_surrender=True,
 		num_players=6,
-		game_interval=500,
-		speed_ms=150,
-		debug=False,
+		game_interval=50,
+		speed_ms=250,
+		debug=True,
 		animate=True
 		)
 
