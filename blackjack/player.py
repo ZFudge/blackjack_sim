@@ -36,14 +36,14 @@ class Person(Evaluate):
 		card = self.shoe.draw()
 		self.hl.count_card([card, self.shoe.size])
 		self.hand.append(card)
-		# if len(self.hand) > 2:
-		# 	print(f'{self.name} hits.')
+		if len(self.hand) > 2:
+			print(f'{self.name} hits.', end='')
 		self.evaluate(card)
 		return card
 
 
 	def stand(self):
-		# print(f'{self.name} stands.')
+		print(f'{self.name} stands.', end='')
 		pass
 
 
@@ -572,10 +572,7 @@ class Player(Person, Basic_Strategy):
 		if type(value) is bool:
 			self._double = value
 			if self._double is True:
-				self.bet *= 2
 				print(f'{self.name} doubles: ${self.bet}')
-			else:
-				self.bet /= 2
 		else:
 			raise ValueError(f'Double value must be a boolean. Received {type(value)}, {value}')
 
@@ -592,7 +589,11 @@ class Player(Person, Basic_Strategy):
 
 	@property
 	def bet(self):
-		return round(self._bet, 2)
+		if self.double:
+			bet = self.max_bet_reduction(self._bet * 2)
+			return round(bet, 2)
+		else:
+			return round(self._bet, 2)
 
 
 	@bet.setter
@@ -610,9 +611,7 @@ class Player(Person, Basic_Strategy):
 
 	def max_bet_reduction(self, bet):
 		one_sixth_bankroll = self.bankroll // 6
-
 		if bet > one_sixth_bankroll:
-
 			if self.bet_unit > one_sixth_bankroll:
 				return self.bet_unit
 			elif one_sixth_bankroll % self.bet_unit == 0:
@@ -620,10 +619,6 @@ class Player(Person, Basic_Strategy):
 			else:
 				one_sixth_bankroll -= one_sixth_bankroll % self.bet_unit
 				return one_sixth_bankroll
-			# if one_sixth_bankroll > self.bet_unit:
-				# bet = self.bankroll // 6 * 6 / 6
-			# else:
-				# return self.bet_unit
 		else:
 			return bet
 
