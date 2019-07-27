@@ -1,4 +1,4 @@
-from cards import card_count_values
+from .cards import card_count_values
 
 
 class Hi_Lo():

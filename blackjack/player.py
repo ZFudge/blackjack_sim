@@ -1,9 +1,9 @@
-from basic_strategy import Basic_Strategy
-from evaluate import Evaluate
-from hi_lo import Hi_Lo
-from shoe import Shoe
+from .basic_strategy import Basic_Strategy
+from .evaluate import Evaluate
+from .hi_lo import Hi_Lo
+from .shoe import Shoe
 
-from inputs import check_same_bet, input_bet, manual_move
+from .inputs import check_same_bet, input_bet, manual_move
 
 from decimal import Decimal
 from math import ceil
@@ -616,7 +616,7 @@ class Player(Person, Basic_Strategy):
 			if value % Decimal(self.bank_adjustment_resolution / 2) == 0:
 				self._bankroll += value
 			else:
-				raise ValueError(f'adjustment is wrong {type(value)}, value: {value}, bar/2: {Decimal(self.bank_adjustment_resolution / 2)}, %{value%self.bank_adjustment_resolution}, {self.name}')
+				raise ValueError(f'Bankroll adjustment is wrong {type(value)}, value: {value}, bar/2: {Decimal(self.bank_adjustment_resolution / 2)}, %{value%self.bank_adjustment_resolution}, {self.name}')
 		else:
 			raise ValueError(f'Bankroll increment value must be Decimal. Received {type(value)}, {value}')
 
@@ -628,8 +628,8 @@ class Player(Person, Basic_Strategy):
 	def bet_unit(self, value):
 		if isinstance(value, int):
 			self._bet_unit = value
-			if self._bet_unit == 0:
-				raise ValueError(f'unit is wrong {self.name}, {self._bet_unit}')
+			if self._bet_unit <= 0:
+				raise ValueError(f'Bet unit must be greater than 0. player: {self.name}, value: {self._bet_unit}')
 		else:
 			raise ValueError(f'Betting unit value must be int. Received {type(value)}, {value}')
 

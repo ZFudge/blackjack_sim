@@ -1,12 +1,9 @@
-from player import Player, Dealer
-from inputs import ask_for_another_round
+from .player import Player, Dealer
+from .inputs import ask_for_another_round
 
 from itertools import count
 import sys
 import os
-
-import matplotlib.pyplot as plot
-from matplotlib.animation import FuncAnimation
 
 
 class Blackjack():
@@ -49,7 +46,6 @@ class Blackjack():
 			stand_on_soft_17=stand_on_soft_17,
 			penetration_percentage=penetration_percentage,
 			number_of_decks=number_of_decks,
-			# player_1=self.players[0]
 			)
 
 
@@ -191,39 +187,11 @@ def main(
 	if not debug:
 		blockPrint()
 
-	plot.style.use('fast')
-
-	fig = plot.figure(figsize=(15, 7))
-	ax1 = plot.subplot2grid((5, 4), (0, 0), rowspan=5, colspan=3)
-	ax2 = plot.subplot2grid((5, 4), (1, 3), rowspan=3, colspan=1)
-
 	x_axis = []
 	x = count()
 	x_axis.append(next(x))
 	bkjk.average()
 	colors = ['#0099ee', '#dd0022']
-
-	def plot_players():
-		for player in bkjk.players:
-			ax1.plot(x_axis, player.y_axis, label=player.name)
-		ax1.plot(x_axis, bkjk.y_axis_average, linestyle='--', label='Average')
-		ax1.legend(loc='upper left')
-		ax1.set_xlabel('Hands')
-		ax1.set_ylabel('Bankroll - USD')
-		ax1.set_title(f'Blackjack Simulation\np:{penetration_percentage}%, #d:{number_of_decks}, ibr:${bankroll}, u: ${bet_unit}, sp:{bet_spread}, bar:{bank_adjustment_resolution}')
-		ax1.grid(True)
-
-	def plot_pie():
-		labels = ['Wins', 'Losses']
-		ax2.pie(
-			[ plyr.wins, plyr.losses ],
-			labels=labels,
-			autopct='%1.1f%%',
-			startangle=90,
-			wedgeprops={"edgecolor":"k"},
-			colors=colors
-			)
-		ax2.set_title(f'Calculated Average House Edge: {round(((100 / (plyr.wins + plyr.losses) * plyr.losses) - 50) * 2, 2)}%')
 
 	def progress_rounds():
 		for y in range(game_interval):
@@ -231,34 +199,10 @@ def main(
 			bkjk.game()
 			bkjk.average()
 
-	if animate:
-		def cont():
-			while len(bkjk.non_bankrupt_players()) > 0:
-				yield True
-			else:
-				print('bankrupt')
+	while len(x_axis) < 1000:
+		progress_rounds()
 
-		def animation_plot(n):
-			ax1.cla()
-			progress_rounds()
-			plot_players()
-			plot.tight_layout()
-
-		def animation_pie(m):
-			ax2.cla()
-			plot_pie()
-			plot.tight_layout()
-
-		animate1 = FuncAnimation(plot.gcf(), animation_plot, frames=cont, interval=speed_ms, repeat=False)
-		animate2 = FuncAnimation(plot.gcf(), animation_pie, frames=cont, interval=speed_ms, repeat=False)
-	else:
-		while len(x_axis) < 10000:
-			progress_rounds()
-		plot_players()
-		plot_pie()
-		plot.tight_layout()
-
-	plot.show()
+	return [p.y_axis for p in bkjk.players]
 
 
 def blockPrint():

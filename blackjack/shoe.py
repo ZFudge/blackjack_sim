@@ -1,4 +1,4 @@
-from cards import single_deck as single_deck_list
+from .cards import single_deck as single_deck_list
 
 import random
 

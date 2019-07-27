@@ -1,4 +1,4 @@
-from cards import high_values as high_value_cards
+from .cards import high_values as high_value_cards
 
 class Evaluate():
 	high_values = high_value_cards
