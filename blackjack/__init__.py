@@ -199,7 +199,7 @@ def main(
 			bkjk.game()
 			bkjk.average()
 
-	while len(x_axis) < 1000:
+	while len(x_axis) < 2000:
 		progress_rounds()
 
 	return [p.y_axis for p in bkjk.players]

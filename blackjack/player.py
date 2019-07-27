@@ -264,23 +264,23 @@ class Player(Person, Basic_Strategy):
 		self._can_double_after_split = can_double_after_split
 		self._can_surrender = can_surrender
 		self._bank_adjustment_resolution = bank_adjustment_resolution
-		self._bet_ratio = bankroll / bet_unit
+		self._bet_to_bankroll_ratio = bankroll / bet_unit
 
 
 	def check_bet_adjustment(self):
-		diff = ceil(int(self.bankroll) / self.bet_ratio) - self.bet_unit
+		diff = ceil(int(self.bankroll) / self.bet_to_bankroll_ratio) - self.bet_unit
 		bar = self.bank_adjustment_resolution
 		if abs(diff) >= bar:
 			increment = diff // bar * bar
 			if increment > 0 or (increment < 0 and self.bankroll > abs(increment)): #self.bet_unit > bar
-				print(f'adjustment bet_unit:{self.bet_unit}, increment:{increment}')
+				print(f'bank_adjustment_resolution: {bar}, bet_unit: {self.bet_unit}, increment:{increment} diff:{diff}')
 				self.bet_unit += int(increment)
-				print(f'bankroll:{self.bankroll}, bet_ratio:{self.bet_ratio}, bet_unit:{self.bet_unit}, diff:{diff}, bank_adjustment_resolution:{bar}, increment:{increment}, ')
+				print(f'bankroll:{self.bankroll}, bet_to_bankroll_ratio:{self.bet_to_bankroll_ratio}, bet_unit:{self.bet_unit} ')
  
 
 	def make_a_bet(self):
 		self.log_bankroll()
-		self.check_bet_adjustment()
+		# self.check_bet_adjustment()
 		if self.use_basic_strategy:
 			self.true_count_bet()
 		else:
@@ -299,27 +299,26 @@ class Player(Person, Basic_Strategy):
 
 	def true_count_bet(self):
 		tc_vetti = self.hl.true_count - 1
-		if tc_vetti > 1:
+		if tc_vetti <= 1:
+			self.bet = self.bet_unit
+		else:
 			tc_bet = self.bet_unit * tc_vetti
-			print(f'tc_vetti: {tc_vetti} * bet_unit: {self.bet_unit} = {tc_bet}')
 			if self.bet_spread is not None:
-				upper_bet_limit = self.bet_spread * self.bet_unit
-				if tc_bet > upper_bet_limit:
-					if upper_bet_limit > self.bankroll:
-						self.bet = self.bankroll
+				if tc_bet > self.max_bet:
+					if self.max_bet > self.bankroll:
+						self.bet = self.max_bet
 					else:
-						self.bet = upper_bet_limit
+						self.bet = self.max_bet
 				else:
 					if tc_bet > self.bankroll:
-						self.bet = self.bankroll
+						self.bet = tc_bet
 					else:
 						self.bet = tc_bet
 			elif tc_bet > self.bankroll:
 				self.bet = self.bankroll
 			else:
 				self.bet = tc_bet
-		else:
-			self.bet = self.bet_unit
+
 
 
 	def manual_bet(self):
@@ -509,7 +508,7 @@ class Player(Person, Basic_Strategy):
 
 
 	def draw(self):
-		print('Push.')
+		print(r'self.name Push.')
 		self.log_bankroll()
 
 
@@ -533,7 +532,7 @@ class Player(Person, Basic_Strategy):
 
 	@property
 	def bankrupt(self):
-		return self.bankroll < 1
+		return self.bankroll < self.bank_adjustment_resolution
 
 	@property
 	def can_double(self):
@@ -595,12 +594,39 @@ class Player(Person, Basic_Strategy):
 	def bet(self):
 		return round(self._bet, 2)
 
+
 	@bet.setter
 	def bet(self, value):
 		if type(value) in [int, float, Decimal]:
+			value = self.max_bet_reduction(value)
 			self._bet = Decimal(value)
 		else:
 			raise ValueError(f'Bet value must be int, float, or Decimal. Received {type(value)}, {value}')
+
+	@property
+	def max_bet(self):
+		return self.bet_spread * self.bet_unit
+
+
+	def max_bet_reduction(self, bet):
+		one_sixth_bankroll = self.bankroll // 6
+
+		if bet > one_sixth_bankroll:
+
+			if self.bet_unit > one_sixth_bankroll:
+				return self.bet_unit
+			elif one_sixth_bankroll % self.bet_unit == 0:
+				return one_sixth_bankroll
+			else:
+				one_sixth_bankroll -= one_sixth_bankroll % self.bet_unit
+				return one_sixth_bankroll
+			# if one_sixth_bankroll > self.bet_unit:
+				# bet = self.bankroll // 6 * 6 / 6
+			# else:
+				# return self.bet_unit
+		else:
+			return bet
+
 
 	@property
 	def use_basic_strategy(self):
@@ -645,8 +671,8 @@ class Player(Person, Basic_Strategy):
 			raise ValueError(f'Bet spread value must be int. Received {type(value)}, {value}')
 
 	@property
-	def bet_ratio(self):
-		return self._bet_ratio
+	def bet_to_bankroll_ratio(self):
+		return self._bet_to_bankroll_ratio
 
 	@property
 	def bank_adjustment_resolution(self):
@@ -658,3 +684,4 @@ def main():
 
 if __name__ == '__main__':
 	main()
+
